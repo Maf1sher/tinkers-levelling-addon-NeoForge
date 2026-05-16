@@ -2,14 +2,15 @@ package pyre.tinkerslevellingaddon.config;
 
 import com.electronwill.nightconfig.core.EnumGetMethod;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.config.ModConfig;
+import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 import pyre.tinkerslevellingaddon.setup.Sounds;
 import slimeknights.tconstruct.library.tools.stat.FloatToolStat;
 import slimeknights.tconstruct.library.tools.stat.ToolStats;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static pyre.tinkerslevellingaddon.util.ToolLevellingUtil.*;
 
@@ -33,150 +34,150 @@ public class Config {
     private static final List<String> DEFAULT_STAFF_STATS_ORDER = List.of(DURABILITY, DRAW_SPEED, VELOCITY, ACCURACY, PROJECTILE_DAMAGE, ARMOR);
     private static final List<String> DEFAULT_STAFF_STATS_RANDOM_POOL = List.of(DURABILITY, DRAW_SPEED, VELOCITY, ACCURACY, PROJECTILE_DAMAGE, ARMOR);
 
-    public static final ForgeConfigSpec SERVER_CONFIG;
-    public static final ForgeConfigSpec CLIENT_CONFIG;
+    public static final ModConfigSpec SERVER_CONFIG;
+    public static final ModConfigSpec CLIENT_CONFIG;
 
     static {
-        ForgeConfigSpec.Builder serverConfigBuilder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder serverConfigBuilder = new ModConfigSpec.Builder();
         generalConfig(serverConfigBuilder);
         toolLevellingConfig(serverConfigBuilder);
         SERVER_CONFIG = serverConfigBuilder.build();
-        ForgeConfigSpec.Builder clientConfigBuilder = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder clientConfigBuilder = new ModConfigSpec.Builder();
         clientConfig(clientConfigBuilder);
         CLIENT_CONFIG = clientConfigBuilder.build();
     }
 
     //SERVER
     //General
-    public static ForgeConfigSpec.EnumValue<GainingMethod> toolsSlotGainingMethod;
-    public static ForgeConfigSpec.EnumValue<GainingMethod> toolsStatGainingMethod;
-    public static ForgeConfigSpec.EnumValue<GainingMethod> rangedSlotGainingMethod;
-    public static ForgeConfigSpec.EnumValue<GainingMethod> rangedStatGainingMethod;
-    public static ForgeConfigSpec.EnumValue<GainingMethod> armorSlotGainingMethod;
-    public static ForgeConfigSpec.EnumValue<GainingMethod> armorStatGainingMethod;
-    public static ForgeConfigSpec.EnumValue<GainingMethod> staffSlotGainingMethod;
-    public static ForgeConfigSpec.EnumValue<GainingMethod> staffStatGainingMethod;
-    public static ForgeConfigSpec.IntValue maxLevel;
-    public static ForgeConfigSpec.IntValue baseExperience;
-    public static ForgeConfigSpec.DoubleValue requiredXpMultiplier;
-    public static ForgeConfigSpec.DoubleValue broadToolRequiredXpMultiplier;
+    public static ModConfigSpec.EnumValue<GainingMethod> toolsSlotGainingMethod;
+    public static ModConfigSpec.EnumValue<GainingMethod> toolsStatGainingMethod;
+    public static ModConfigSpec.EnumValue<GainingMethod> rangedSlotGainingMethod;
+    public static ModConfigSpec.EnumValue<GainingMethod> rangedStatGainingMethod;
+    public static ModConfigSpec.EnumValue<GainingMethod> armorSlotGainingMethod;
+    public static ModConfigSpec.EnumValue<GainingMethod> armorStatGainingMethod;
+    public static ModConfigSpec.EnumValue<GainingMethod> staffSlotGainingMethod;
+    public static ModConfigSpec.EnumValue<GainingMethod> staffStatGainingMethod;
+    public static ModConfigSpec.IntValue maxLevel;
+    public static ModConfigSpec.IntValue baseExperience;
+    public static ModConfigSpec.DoubleValue requiredXpMultiplier;
+    public static ModConfigSpec.DoubleValue broadToolRequiredXpMultiplier;
 
     //general.slots
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> toolsSlotTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> toolsSlotTypeOrder;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> rangedSlotTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> rangedSlotTypeOrder;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> armorSlotTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> armorSlotTypeOrder;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> staffSlotTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> staffSlotTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> toolsSlotTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> toolsSlotTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> rangedSlotTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> rangedSlotTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> armorSlotTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> armorSlotTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> staffSlotTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> staffSlotTypeOrder;
 
     //general.stats
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> toolsStatTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> toolsStatTypeOrder;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> rangedStatTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> rangedStatTypeOrder;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> armorStatTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> armorStatTypeOrder;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> staffStatTypeRandomPool;
-    private static ForgeConfigSpec.ConfigValue<List<? extends String>> staffStatTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> toolsStatTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> toolsStatTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> rangedStatTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> rangedStatTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> armorStatTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> armorStatTypeOrder;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> staffStatTypeRandomPool;
+    private static ModConfigSpec.ConfigValue<List<? extends String>> staffStatTypeOrder;
 
     //general.stats.toolValues
-    public static ForgeConfigSpec.IntValue toolDurabilityValue;
-    public static ForgeConfigSpec.DoubleValue toolAttackDamageValue;
-    public static ForgeConfigSpec.DoubleValue toolAttackSpeedValue;
-    public static ForgeConfigSpec.DoubleValue toolMiningSpeedValue;
+    public static ModConfigSpec.IntValue toolDurabilityValue;
+    public static ModConfigSpec.DoubleValue toolAttackDamageValue;
+    public static ModConfigSpec.DoubleValue toolAttackSpeedValue;
+    public static ModConfigSpec.DoubleValue toolMiningSpeedValue;
     
     //general.stats.rangedValues
-    public static ForgeConfigSpec.IntValue rangedDurabilityValue;
-    public static ForgeConfigSpec.DoubleValue rangedDrawSpeedValue;
-    public static ForgeConfigSpec.DoubleValue rangedVelocityValue;
-    public static ForgeConfigSpec.DoubleValue rangedAccuracyValue;
-    public static ForgeConfigSpec.DoubleValue rangedProjectileDamageValue;
-    public static ForgeConfigSpec.DoubleValue rangedAttackDamageValue;
-    public static ForgeConfigSpec.DoubleValue rangedAttackSpeedValue;
+    public static ModConfigSpec.IntValue rangedDurabilityValue;
+    public static ModConfigSpec.DoubleValue rangedDrawSpeedValue;
+    public static ModConfigSpec.DoubleValue rangedVelocityValue;
+    public static ModConfigSpec.DoubleValue rangedAccuracyValue;
+    public static ModConfigSpec.DoubleValue rangedProjectileDamageValue;
+    public static ModConfigSpec.DoubleValue rangedAttackDamageValue;
+    public static ModConfigSpec.DoubleValue rangedAttackSpeedValue;
 
     //general.stats.armorValues
-    public static ForgeConfigSpec.IntValue armorDurabilityValue;
-    public static ForgeConfigSpec.DoubleValue armorArmorValue;
-    public static ForgeConfigSpec.DoubleValue armorArmorToughnessValue;
-    public static ForgeConfigSpec.DoubleValue armorKnockbackResistanceValue;
+    public static ModConfigSpec.IntValue armorDurabilityValue;
+    public static ModConfigSpec.DoubleValue armorArmorValue;
+    public static ModConfigSpec.DoubleValue armorArmorToughnessValue;
+    public static ModConfigSpec.DoubleValue armorKnockbackResistanceValue;
     
     //general.stats.staffValues
-    public static ForgeConfigSpec.IntValue staffDurabilityValue;
-    public static ForgeConfigSpec.DoubleValue staffDrawSpeedValue;
-    public static ForgeConfigSpec.DoubleValue staffVelocityValue;
-    public static ForgeConfigSpec.DoubleValue staffAccuracyValue;
-    public static ForgeConfigSpec.DoubleValue staffProjectileDamageValue;
-    public static ForgeConfigSpec.DoubleValue staffArmorValue;
+    public static ModConfigSpec.IntValue staffDurabilityValue;
+    public static ModConfigSpec.DoubleValue staffDrawSpeedValue;
+    public static ModConfigSpec.DoubleValue staffVelocityValue;
+    public static ModConfigSpec.DoubleValue staffAccuracyValue;
+    public static ModConfigSpec.DoubleValue staffProjectileDamageValue;
+    public static ModConfigSpec.DoubleValue staffArmorValue;
 
     //toolLevelling
-    public static ForgeConfigSpec.BooleanValue damageDealt;
-    public static ForgeConfigSpec.BooleanValue damageTaken;
-    public static ForgeConfigSpec.BooleanValue damageBlocked;
-    public static ForgeConfigSpec.BooleanValue enablePvp;
-    public static ForgeConfigSpec.IntValue flyingTime;
+    public static ModConfigSpec.BooleanValue damageDealt;
+    public static ModConfigSpec.BooleanValue damageTaken;
+    public static ModConfigSpec.BooleanValue damageBlocked;
+    public static ModConfigSpec.BooleanValue enablePvp;
+    public static ModConfigSpec.IntValue flyingTime;
 
     //toolLevelling.actions
-    public static ForgeConfigSpec.BooleanValue enableMiningXp;
-    public static ForgeConfigSpec.BooleanValue enableHarvestingXp;
-    public static ForgeConfigSpec.BooleanValue enableShearingXp;
-    public static ForgeConfigSpec.BooleanValue enableStrippingXp;
-    public static ForgeConfigSpec.BooleanValue enableScrappingXp;
-    public static ForgeConfigSpec.BooleanValue enableWaxingOffXp;
-    public static ForgeConfigSpec.BooleanValue enableTillingXp;
-    public static ForgeConfigSpec.BooleanValue enablePathMakingXp;
-    public static ForgeConfigSpec.BooleanValue enableAttackingXp;
-    public static ForgeConfigSpec.BooleanValue enableShootingXp;
-    public static ForgeConfigSpec.BooleanValue enableTakingDamageXp;
-    public static ForgeConfigSpec.BooleanValue enableBlockingDamageXp;
-    public static ForgeConfigSpec.BooleanValue enableThornsXp;
-    public static ForgeConfigSpec.BooleanValue enableFlyingXp;
-    public static ForgeConfigSpec.BooleanValue enablePlowingXp;
-    public static ForgeConfigSpec.BooleanValue enablePathMakerXp;
-    public static ForgeConfigSpec.BooleanValue enableSnowdriftXp;
-    public static ForgeConfigSpec.BooleanValue enableFlamewakeXp;
-    public static ForgeConfigSpec.BooleanValue enableFrostWalkerXp;
-    public static ForgeConfigSpec.BooleanValue enableWarpingXp;
-    public static ForgeConfigSpec.BooleanValue enableFlingingXp;
-    public static ForgeConfigSpec.BooleanValue enableSpringingXp;
-    public static ForgeConfigSpec.BooleanValue enableBonkingXp;
-    public static ForgeConfigSpec.BooleanValue enableGlowingXp;
-    public static ForgeConfigSpec.BooleanValue enableFirestarterXp;
+    public static ModConfigSpec.BooleanValue enableMiningXp;
+    public static ModConfigSpec.BooleanValue enableHarvestingXp;
+    public static ModConfigSpec.BooleanValue enableShearingXp;
+    public static ModConfigSpec.BooleanValue enableStrippingXp;
+    public static ModConfigSpec.BooleanValue enableScrappingXp;
+    public static ModConfigSpec.BooleanValue enableWaxingOffXp;
+    public static ModConfigSpec.BooleanValue enableTillingXp;
+    public static ModConfigSpec.BooleanValue enablePathMakingXp;
+    public static ModConfigSpec.BooleanValue enableAttackingXp;
+    public static ModConfigSpec.BooleanValue enableShootingXp;
+    public static ModConfigSpec.BooleanValue enableTakingDamageXp;
+    public static ModConfigSpec.BooleanValue enableBlockingDamageXp;
+    public static ModConfigSpec.BooleanValue enableThornsXp;
+    public static ModConfigSpec.BooleanValue enableFlyingXp;
+    public static ModConfigSpec.BooleanValue enablePlowingXp;
+    public static ModConfigSpec.BooleanValue enablePathMakerXp;
+    public static ModConfigSpec.BooleanValue enableSnowdriftXp;
+    public static ModConfigSpec.BooleanValue enableFlamewakeXp;
+    public static ModConfigSpec.BooleanValue enableFrostWalkerXp;
+    public static ModConfigSpec.BooleanValue enableWarpingXp;
+    public static ModConfigSpec.BooleanValue enableFlingingXp;
+    public static ModConfigSpec.BooleanValue enableSpringingXp;
+    public static ModConfigSpec.BooleanValue enableBonkingXp;
+    public static ModConfigSpec.BooleanValue enableGlowingXp;
+    public static ModConfigSpec.BooleanValue enableFirestarterXp;
 
     //toolLevelling.bonuses
-    public static ForgeConfigSpec.IntValue bonusMiningXp;
-    public static ForgeConfigSpec.IntValue bonusHarvestingXp;
-    public static ForgeConfigSpec.IntValue bonusShearingXp;
-    public static ForgeConfigSpec.IntValue bonusStrippingXp;
-    public static ForgeConfigSpec.IntValue bonusScrappingXp;
-    public static ForgeConfigSpec.IntValue bonusWaxingOffXp;
-    public static ForgeConfigSpec.IntValue bonusTillingXp;
-    public static ForgeConfigSpec.IntValue bonusPathMakingXp;
-    public static ForgeConfigSpec.IntValue bonusAttackingXp;
-    public static ForgeConfigSpec.IntValue bonusShootingXp;
-    public static ForgeConfigSpec.IntValue bonusTakingDamageXp;
-    public static ForgeConfigSpec.IntValue bonusBlockingDamageXp;
-    public static ForgeConfigSpec.IntValue bonusThornsXp;
-    public static ForgeConfigSpec.IntValue bonusFlyingXp;
-    public static ForgeConfigSpec.IntValue bonusPlowingXp;
-    public static ForgeConfigSpec.IntValue bonusPathMakerXp;
-    public static ForgeConfigSpec.IntValue bonusSnowdriftXp;
-    public static ForgeConfigSpec.IntValue bonusFlamewakeXp;
-    public static ForgeConfigSpec.IntValue bonusFrostWalkerXp;
-    public static ForgeConfigSpec.IntValue bonusWarpingXp;
-    public static ForgeConfigSpec.IntValue bonusFlingingXp;
-    public static ForgeConfigSpec.IntValue bonusSpringingXp;
-    public static ForgeConfigSpec.IntValue bonusBonkingXp;
-    public static ForgeConfigSpec.IntValue bonusGlowingXp;
-    public static ForgeConfigSpec.IntValue bonusFirestarterXp;
+    public static ModConfigSpec.IntValue bonusMiningXp;
+    public static ModConfigSpec.IntValue bonusHarvestingXp;
+    public static ModConfigSpec.IntValue bonusShearingXp;
+    public static ModConfigSpec.IntValue bonusStrippingXp;
+    public static ModConfigSpec.IntValue bonusScrappingXp;
+    public static ModConfigSpec.IntValue bonusWaxingOffXp;
+    public static ModConfigSpec.IntValue bonusTillingXp;
+    public static ModConfigSpec.IntValue bonusPathMakingXp;
+    public static ModConfigSpec.IntValue bonusAttackingXp;
+    public static ModConfigSpec.IntValue bonusShootingXp;
+    public static ModConfigSpec.IntValue bonusTakingDamageXp;
+    public static ModConfigSpec.IntValue bonusBlockingDamageXp;
+    public static ModConfigSpec.IntValue bonusThornsXp;
+    public static ModConfigSpec.IntValue bonusFlyingXp;
+    public static ModConfigSpec.IntValue bonusPlowingXp;
+    public static ModConfigSpec.IntValue bonusPathMakerXp;
+    public static ModConfigSpec.IntValue bonusSnowdriftXp;
+    public static ModConfigSpec.IntValue bonusFlamewakeXp;
+    public static ModConfigSpec.IntValue bonusFrostWalkerXp;
+    public static ModConfigSpec.IntValue bonusWarpingXp;
+    public static ModConfigSpec.IntValue bonusFlingingXp;
+    public static ModConfigSpec.IntValue bonusSpringingXp;
+    public static ModConfigSpec.IntValue bonusBonkingXp;
+    public static ModConfigSpec.IntValue bonusGlowingXp;
+    public static ModConfigSpec.IntValue bonusFirestarterXp;
 
     //CLIENT
-    public static ForgeConfigSpec.BooleanValue enableLevelUpMessage;
-    public static ForgeConfigSpec.BooleanValue squashLevelPluses;
-    public static ForgeConfigSpec.EnumValue<LevelUpSound> levelUpSound;
+    public static ModConfigSpec.BooleanValue enableLevelUpMessage;
+    public static ModConfigSpec.BooleanValue squashLevelPluses;
+    public static ModConfigSpec.EnumValue<LevelUpSound> levelUpSound;
 
-    private static void generalConfig(ForgeConfigSpec.Builder builder) {
+    private static void generalConfig(ModConfigSpec.Builder builder) {
         builder.comment("General addon settings").push("general");
 
         toolsSlotGainingMethod = builder.comment("Method of gaining modifier slots for tools.")
@@ -234,74 +235,74 @@ public class Config {
         builder.pop();
     }
 
-    private static void slotsConfig(ForgeConfigSpec.Builder builder) {
+    private static void slotsConfig(ModConfigSpec.Builder builder) {
         builder.comment("Modifier slots settings").push("slots");
 
         toolsSlotTypeRandomPool = builder.comment("Set of modifier slot types from which random slot will be awarded when leveling up tools.",
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_TOOLS_SLOTS_RANDOM_POOL) + "). 80% chance for upgrade and 20% chance for ability.",
                         "Allowed values: " + String.join(", ", getToolSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.slots.tools_slot_type_random_pool")
-                .defineList("toolsSlotTypeRandomPool", DEFAULT_TOOLS_SLOTS_RANDOM_POOL, t -> getToolSlotTypes().contains(t));
+                .defineList("toolsSlotTypeRandomPool", DEFAULT_TOOLS_SLOTS_RANDOM_POOL, t -> getToolSlotTypes().contains((String) t));
 
         toolsSlotTypeOrder = builder.comment("List of modifier slot types (in order) that will be awarded when leveling up tools. If level is higher than list size the mod will start over.",
                         "If empty default order will be used (" + String.join(", ", DEFAULT_TOOLS_SLOTS_ORDER) + ").",
                         "Allowed values: " + String.join(", ", getToolSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.slots.tools_slot_type_order")
-                .defineList("toolsSlotTypeOrder", DEFAULT_TOOLS_SLOTS_ORDER, t -> getToolSlotTypes().contains(t));
+                .defineList("toolsSlotTypeOrder", DEFAULT_TOOLS_SLOTS_ORDER, t -> getToolSlotTypes().contains((String) t));
     
         rangedSlotTypeRandomPool = builder.comment("Set of modifier slot types from which random slot will be awarded when leveling up ranged weapons.",
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_RANGED_SLOTS_RANDOM_POOL) + "). 80% chance for upgrade and 20% chance for ability.",
                         "Allowed values: " + String.join(", ", getToolSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.slots.ranged_slot_type_random_pool")
-                .defineList("rangedSlotTypeRandomPool", DEFAULT_RANGED_SLOTS_RANDOM_POOL, t -> getRangedSlotTypes().contains(t));
+                .defineList("rangedSlotTypeRandomPool", DEFAULT_RANGED_SLOTS_RANDOM_POOL, t -> getRangedSlotTypes().contains((String) t));
     
         rangedSlotTypeOrder = builder.comment("List of modifier slot types (in order) that will be awarded when leveling up ranged weapons. If level is higher than list size the mod will start over.",
                         "If empty default order will be used (" + String.join(", ", DEFAULT_RANGED_SLOTS_ORDER) + ").",
                         "Allowed values: " + String.join(", ", getToolSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.slots.ranged_slot_type_order")
-                .defineList("rangedSlotTypeOrder", DEFAULT_RANGED_SLOTS_ORDER, t -> getRangedSlotTypes().contains(t));
+                .defineList("rangedSlotTypeOrder", DEFAULT_RANGED_SLOTS_ORDER, t -> getRangedSlotTypes().contains((String) t));
 
         armorSlotTypeRandomPool = builder.comment("Set of modifier slot types from which random slot will be awarded when leveling up armor.",
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_ARMOR_SLOTS_RANDOM_POOL) + ").",
                         "Allowed values: " + String.join(", ", getArmorSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.modifiers.armor_slot_type_random_pool")
-                .defineList("armorSlotTypeRandomPool", DEFAULT_ARMOR_SLOTS_RANDOM_POOL, t -> getArmorSlotTypes().contains(t));
+                .defineList("armorSlotTypeRandomPool", DEFAULT_ARMOR_SLOTS_RANDOM_POOL, t -> getArmorSlotTypes().contains((String) t));
 
         armorSlotTypeOrder = builder.comment("List of modifier slot types (in order) that will be awarded when leveling up armor. If level is higher than list size the mod will start over.",
                         "If empty default order will be used (" + String.join(", ", DEFAULT_ARMOR_SLOTS_ORDER) + ").",
                         "Allowed values: " + String.join(", ", getArmorSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.slots.armor_slot_type_order")
-                .defineList("armorSlotTypeOrder", DEFAULT_ARMOR_SLOTS_ORDER, t -> getArmorSlotTypes().contains(t));
+                .defineList("armorSlotTypeOrder", DEFAULT_ARMOR_SLOTS_ORDER, t -> getArmorSlotTypes().contains((String) t));
         
         staffSlotTypeRandomPool = builder.comment("Set of modifier slot types from which random slot will be awarded when leveling up staffs.",
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_STAFF_SLOTS_RANDOM_POOL) + ").",
                         "Allowed values: " + String.join(", ", getArmorSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.modifiers.staff_slot_type_random_pool")
-                .defineList("staffSlotTypeRandomPool", DEFAULT_STAFF_SLOTS_RANDOM_POOL, t -> getStaffSlotTypes().contains(t));
+                .defineList("staffSlotTypeRandomPool", DEFAULT_STAFF_SLOTS_RANDOM_POOL, t -> getStaffSlotTypes().contains((String) t));
         
         staffSlotTypeOrder = builder.comment("List of modifier slot types (in order) that will be awarded when leveling up staffs. If level is higher than list size the mod will start over.",
                         "If empty default order will be used (" + String.join(", ", DEFAULT_STAFF_SLOTS_ORDER) + ").",
                         "Allowed values: " + String.join(", ", getStaffSlotTypes()))
                 .translation("config.tinkerslevellingaddon.general.slots.staff_slot_type_order")
-                .defineList("staffSlotTypeOrder", DEFAULT_STAFF_SLOTS_ORDER, t -> getStaffSlotTypes().contains(t));
+                .defineList("staffSlotTypeOrder", DEFAULT_STAFF_SLOTS_ORDER, t -> getStaffSlotTypes().contains((String) t));
 
         builder.pop();
     }
 
-    private static void statsConfig(ForgeConfigSpec.Builder builder) {
+    private static void statsConfig(ModConfigSpec.Builder builder) {
         builder.comment("Stats settings").push("stats");
 
         toolsStatTypeRandomPool = builder.comment("Set of stat types from which random stat will be awarded when leveling up tools.",
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_TOOLS_STATS_RANDOM_POOL) + "). 25% chance for every stat.",
                         "Allowed values: " + String.join(", ", getToolStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.tools_stat_type_random_pool")
-                .defineList("toolsStatTypeRandomPool", DEFAULT_TOOLS_STATS_RANDOM_POOL, t -> getToolStatTypes().contains(t));
+                .defineList("toolsStatTypeRandomPool", DEFAULT_TOOLS_STATS_RANDOM_POOL, t -> getToolStatTypes().contains((String) t));
 
         toolsStatTypeOrder = builder.comment("List of stat types (in order) that will be awarded when leveling up tools. If level is higher than list size the mod will start over.",
                         "If empty default order will be used (" + String.join(", ", DEFAULT_TOOLS_STATS_ORDER) + ").",
                         "Allowed values: " + String.join(", ", getToolStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.tools_stat_type_order")
-                .defineList("toolsStatTypeOrder", DEFAULT_TOOLS_STATS_ORDER, t -> getToolStatTypes().contains(t));
+                .defineList("toolsStatTypeOrder", DEFAULT_TOOLS_STATS_ORDER, t -> getToolStatTypes().contains((String) t));
 
         toolStatsValuesConfig(builder);
     
@@ -310,13 +311,13 @@ public class Config {
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_RANGED_STATS_RANDOM_POOL) + ").",
                         "Possible values: " + String.join(", ", getRangedStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.ranged_stat_type_random_pool")
-                .defineList("rangedStatTypeRandomPool", DEFAULT_RANGED_STATS_RANDOM_POOL, t -> getRangedStatTypes().contains(t));
+                .defineList("rangedStatTypeRandomPool", DEFAULT_RANGED_STATS_RANDOM_POOL, t -> getRangedStatTypes().contains((String) t));
     
         rangedStatTypeOrder = builder.comment("List of stat types (in order) that will be awarded when leveling up ranged weapons. If level is higher than list size the mod will start over.",
                         "If empty default rotation will be used (" + String.join(", ", DEFAULT_RANGED_STATS_ORDER) + ").",
                         "Possible values: " + String.join(", ", getRangedStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.ranged_stat_type_order")
-                .defineList("rangedStatTypeRotation", DEFAULT_RANGED_STATS_ORDER, t -> getRangedStatTypes().contains(t));
+                .defineList("rangedStatTypeRotation", DEFAULT_RANGED_STATS_ORDER, t -> getRangedStatTypes().contains((String) t));
     
         rangedStatsValuesConfig(builder);
 
@@ -324,13 +325,13 @@ public class Config {
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_ARMOR_STATS_RANDOM_POOL) + ").",
                         "Allowed values: " + String.join(", ", getArmorStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.armor_stat_type_random_pool")
-                .defineList("armorStatTypeRandomPool", DEFAULT_ARMOR_STATS_RANDOM_POOL, t -> getArmorStatTypes().contains(t));
+                .defineList("armorStatTypeRandomPool", DEFAULT_ARMOR_STATS_RANDOM_POOL, t -> getArmorStatTypes().contains((String) t));
 
         armorStatTypeOrder = builder.comment("List of stat types (in order) that will be awarded when leveling up armor. If level is higher than list size the mod will start over.",
                         "If empty default order will be used (" + String.join(", ", DEFAULT_ARMOR_STATS_ORDER) + ").",
                         "Allowed values: " + String.join(", ", getArmorStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.armor_stat_type_order")
-                .defineList("armorStatTypeOrder", DEFAULT_ARMOR_STATS_ORDER, t -> getArmorStatTypes().contains(t));
+                .defineList("armorStatTypeOrder", DEFAULT_ARMOR_STATS_ORDER, t -> getArmorStatTypes().contains((String) t));
 
         armorStatsValuesConfig(builder);
         
@@ -338,20 +339,20 @@ public class Config {
                         "If empty default pool will be used (" + String.join(", ", DEFAULT_STAFF_STATS_RANDOM_POOL) + ").",
                         "Allowed values: " + String.join(", ", getStaffStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.staff_stat_type_random_pool")
-                .defineList("staffStatTypeRandomPool", DEFAULT_STAFF_STATS_RANDOM_POOL, t -> getStaffStatTypes().contains(t));
+                .defineList("staffStatTypeRandomPool", DEFAULT_STAFF_STATS_RANDOM_POOL, t -> getStaffStatTypes().contains((String) t));
         
         staffStatTypeOrder = builder.comment("List of stat types (in order) that will be awarded when leveling up staffs. If level is higher than list size the mod will start over.",
                         "If empty default order will be used (" + String.join(", ", DEFAULT_STAFF_STATS_ORDER) + ").",
                         "Allowed values: " + String.join(", ", getStaffStatTypes()))
                 .translation("config.tinkerslevellingaddon.general.stats.staff_stat_type_order")
-                .defineList("staffStatTypeOrder", DEFAULT_STAFF_STATS_ORDER, t -> getStaffStatTypes().contains(t));
+                .defineList("staffStatTypeOrder", DEFAULT_STAFF_STATS_ORDER, t -> getStaffStatTypes().contains((String) t));
         
         staffStatsValuesConfig(builder);
 
         builder.pop();
     }
 
-    private static void toolStatsValuesConfig(ForgeConfigSpec.Builder builder) {
+    private static void toolStatsValuesConfig(ModConfigSpec.Builder builder) {
         builder.comment("Tool stat values rewarded on level ups").push("toolValues");
 
         toolDurabilityValue = builder.translation("tooltip.tinkerslevellingaddon.stats.durability")
@@ -369,7 +370,7 @@ public class Config {
         builder.pop();
     }
     
-    private static void rangedStatsValuesConfig(ForgeConfigSpec.Builder builder) {
+    private static void rangedStatsValuesConfig(ModConfigSpec.Builder builder) {
         builder.comment("Ranged weapons stat values rewarded on level ups").push("rangedValues");
         
         rangedDurabilityValue = builder.translation("tooltip.tinkerslevellingaddon.stat.durability")
@@ -396,7 +397,7 @@ public class Config {
         builder.pop();
     }
 
-    private static void armorStatsValuesConfig(ForgeConfigSpec.Builder builder) {
+    private static void armorStatsValuesConfig(ModConfigSpec.Builder builder) {
         builder.comment("Armor stat values rewarded on level ups").push("armorValues");
 
         armorDurabilityValue = builder.translation("tooltip.tinkerslevellingaddon.stats.durability")
@@ -414,7 +415,7 @@ public class Config {
         builder.pop();
     }
     
-    private static void staffStatsValuesConfig(ForgeConfigSpec.Builder builder) {
+    private static void staffStatsValuesConfig(ModConfigSpec.Builder builder) {
         builder.comment("Staff stat values rewarded on level ups").push("staffValues");
         
         staffDurabilityValue = builder.translation("tooltip.tinkerslevellingaddon.stat.durability")
@@ -438,7 +439,7 @@ public class Config {
         builder.pop();
     }
 
-    private static void toolLevellingConfig(ForgeConfigSpec.Builder builder) {
+    private static void toolLevellingConfig(ModConfigSpec.Builder builder) {
         builder.comment("Tool levelling settings").push("toolLevelling");
 
         damageDealt = builder.comment("Melee only!", "If true, base experience value gained for attacking is equal to damage dealt (rounded to whole number), otherwise 1.")
@@ -464,7 +465,7 @@ public class Config {
         builder.pop();
     }
 
-    private static void actionsConfig(ForgeConfigSpec.Builder builder) {
+    private static void actionsConfig(ModConfigSpec.Builder builder) {
         builder.comment("If true, given action will yield tool experience.").push("actions");
 
         enableMiningXp = builder.translation("config.tinkerslevellingaddon.levelling.mining")
@@ -516,7 +517,7 @@ public class Config {
                 .define("plowing", true);
         
         enablePathMakerXp = builder.translation("config.tinkerslevellingaddon.levelling.path_maker")
-                .define("path_maker", true);
+                .define("path__maker", true);
         
         enableSnowdriftXp = builder.translation("config.tinkerslevellingaddon.levelling.snowdrift")
                 .define("snowdrift", true);
@@ -548,7 +549,7 @@ public class Config {
         builder.pop();
     }
 
-    private static void bonusesConfig(ForgeConfigSpec.Builder builder) {
+    private static void bonusesConfig(ModConfigSpec.Builder builder) {
         builder.comment("Amount of bonus experience for performing actions. If set to 0 there is no bonus experience.").push("bonuses");
 
         bonusMiningXp = builder.translation("config.tinkerslevellingaddon.levelling.mining")
@@ -631,7 +632,7 @@ public class Config {
         builder.pop();
     }
 
-    private static void clientConfig(ForgeConfigSpec.Builder builder) {
+    private static void clientConfig(ModConfigSpec.Builder builder) {
         builder.comment("Client only settings").push("client");
 
         enableLevelUpMessage = builder.comment("If true, shows chat message on tool level ups.")
@@ -649,8 +650,8 @@ public class Config {
     }
 
     public static void init() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, CLIENT_CONFIG);
+        ModLoadingContext.get().getActiveContainer().registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
+        ModLoadingContext.get().getActiveContainer().registerConfig(ModConfig.Type.CLIENT, CLIENT_CONFIG);
     }
 
     public static List<String> getToolsSlotsOrder() {
@@ -861,20 +862,20 @@ public class Config {
     }
 
     public enum LevelUpSound {
-        NONE(null),
-        CHIME(Sounds.CHIME.getSound()),
-        SNARE_DRUM(Sounds.SNARE_DRUM.getSound()),
-        YAY(Sounds.YAY.getSound()),
-        BONK(slimeknights.tconstruct.common.Sounds.BONK.getSound());
+        NONE(() -> null),
+        CHIME(Sounds.CHIME::getSound),
+        SNARE_DRUM(Sounds.SNARE_DRUM::getSound),
+        YAY(Sounds.YAY::getSound),
+        BONK(slimeknights.tconstruct.common.Sounds.BONK::getSound);
 
-        private final SoundEvent soundEvent;
+        private final Supplier<SoundEvent> soundEvent;
 
-        LevelUpSound(SoundEvent soundEvent) {
+        LevelUpSound(Supplier<SoundEvent> soundEvent) {
             this.soundEvent = soundEvent;
         }
 
         public SoundEvent getSoundEvent() {
-            return soundEvent;
+            return soundEvent.get();
         }
     }
 

@@ -1,44 +1,25 @@
 package pyre.tinkerslevellingaddon.network;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
 
+@EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
 public class Messages {
+    private static final String VERSION = "1";
 
-    private static SimpleChannel INSTANCE;
+    @SubscribeEvent
+    public static void register(RegisterPayloadHandlersEvent event) {
+        final PayloadRegistrar registrar = event.registrar(VERSION);
 
-    private static int packetId = 0;
-    private static int id() {
-        return packetId++;
+        registrar.playToClient(LevelUpPacket.TYPE, LevelUpPacket.STREAM_CODEC, LevelUpPacket::handle);
     }
 
-    public static void register() {
-        SimpleChannel net = NetworkRegistry.ChannelBuilder
-                .named(new ResourceLocation(TinkersLevellingAddon.MOD_ID, "messages"))
-                .networkProtocolVersion(() -> "1.0")
-                .clientAcceptedVersions(s -> true)
-                .serverAcceptedVersions(s -> true)
-                .simpleChannel();
-
-        INSTANCE = net;
-
-        net.messageBuilder(LevelUpPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(LevelUpPacket::new)
-                .encoder(LevelUpPacket::toBytes)
-                .consumerMainThread(LevelUpPacket::handle)
-                .add();
-    }
-
-    public static <MSG> void sendToServer(MSG message) {
-        INSTANCE.sendToServer(message);
-    }
-
-    public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
-        INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), message);
+    public static <MSG extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> void sendToPlayer(MSG message, ServerPlayer player) {
+        PacketDistributor.sendToPlayer(player, message);
     }
 }

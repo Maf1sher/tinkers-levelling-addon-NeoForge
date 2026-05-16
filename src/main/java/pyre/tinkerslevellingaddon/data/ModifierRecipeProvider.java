@@ -1,10 +1,12 @@
 package pyre.tinkerslevellingaddon.data;
 
+import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
-import net.minecraft.data.recipes.FinishedRecipe;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.data.recipes.RecipeProvider;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.common.crafting.conditions.IConditionBuilder;
+import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
 import pyre.tinkerslevellingaddon.util.ModUtil;
 import slimeknights.mantle.recipe.data.IRecipeHelper;
@@ -12,21 +14,16 @@ import slimeknights.tconstruct.library.modifiers.ModifierId;
 import slimeknights.tconstruct.library.recipe.modifiers.adding.ModifierRecipeBuilder;
 import slimeknights.tconstruct.library.tools.SlotType;
 
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
 
 public class ModifierRecipeProvider extends RecipeProvider implements IConditionBuilder, IRecipeHelper {
 
-    public ModifierRecipeProvider(PackOutput generator) {
-        super(generator);
+    public ModifierRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+        super(output, registries);
     }
 
-    /*@Override
-    public String getName() {
-        return "Tinkers' Levelling Addon Modifier Recipes";
-    }*/
-
     @Override
-    protected void buildRecipes(Consumer<FinishedRecipe> consumer) {
+    protected void buildRecipes(RecipeOutput consumer) {
         String abilityFolder = "tools/modifiers/ability/";
         String abilitySalvage = "tools/modifiers/salvage/ability/";
 
@@ -39,8 +36,14 @@ public class ModifierRecipeProvider extends RecipeProvider implements ICondition
                 .addInput(Items.EXPERIENCE_BOTTLE)
                 .setSlots(SlotType.ABILITY, 1)
                 .setMaxLevel(1)
-                .saveSalvage(consumer, prefix(improvableId, abilitySalvage))
-                .save(consumer, prefix(improvableId, abilityFolder));
+                .saveSalvage(consumer, prefix(improvableId.location(), abilitySalvage))
+                .save(consumer, prefix(improvableId.location(), abilityFolder));
+    }
+
+    /* IRecipeHelper helpers */
+    @Override
+    public ResourceLocation prefix(ResourceLocation location, String prefix) {
+        return ResourceLocation.fromNamespaceAndPath(location.getNamespace(), prefix + location.getPath());
     }
 
     @Override

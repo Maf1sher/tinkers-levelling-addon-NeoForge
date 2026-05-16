@@ -3,35 +3,34 @@ package pyre.tinkerslevellingaddon;
 import com.mojang.logging.LogUtils;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
-import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.data.event.GatherDataEvent;
 import org.slf4j.Logger;
 import pyre.tinkerslevellingaddon.command.ModCommands;
 import pyre.tinkerslevellingaddon.config.Config;
 import pyre.tinkerslevellingaddon.data.ModifierRecipeProvider;
-import pyre.tinkerslevellingaddon.network.Messages;
 import pyre.tinkerslevellingaddon.setup.Registration;
 
 @Mod(TinkersLevellingAddon.MOD_ID)
-@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class TinkersLevellingAddon {
 
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public static final String MOD_ID = "tinkerslevellingaddon";
 
-    public TinkersLevellingAddon() {
+    public TinkersLevellingAddon(IEventBus modEventBus) {
         Config.init();
-        Registration.init();
-        Messages.register();
+        Registration.init(modEventBus);
+        // Messages.register();
         ModCommands.init();
+
+        modEventBus.addListener(this::gatherData);
     }
 
-    @SubscribeEvent
-    static void gatherData(final GatherDataEvent event) {
+    private void gatherData(final GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();
-        generator.addProvider(event.includeServer(), new ModifierRecipeProvider(packOutput));
+        generator.addProvider(event.includeServer(), new ModifierRecipeProvider(packOutput, event.getLookupProvider()));
     }
 }

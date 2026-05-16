@@ -18,13 +18,13 @@ import slimeknights.tconstruct.library.tools.stat.ToolStats;
 
 import java.util.*;
 
-import static pyre.tinkerslevellingaddon.ImprovableModifier.*;
+// import static pyre.tinkerslevellingaddon.ImprovableModifier.*;
 
 public class ToolLevellingUtil {
     //slot types
-    public static final String UPGRADE = "upgrade";
-    public static final String ABILITY = "ability";
-    public static final String SOUL = "soul";
+    public static final String UPGRADE = "upgrades";
+    public static final String ABILITY = "abilities";
+    public static final String SOUL = "souls";
     public static final String DEFENSE = "defense";
     
     //stat types
@@ -40,6 +40,11 @@ public class ToolLevellingUtil {
     public static final String VELOCITY = "velocity";
     public static final String ACCURACY = "accuracy";
     public static final String PROJECTILE_DAMAGE = "projectileDamage";
+
+    public static final ResourceLocation EXPERIENCE_KEY = ModUtil.getResource("experience");
+    public static final ResourceLocation LEVEL_KEY = ModUtil.getResource("level");
+    public static final ResourceLocation SLOT_HISTORY_KEY = ModUtil.getResource("slot_history");
+    public static final ResourceLocation STAT_HISTORY_KEY = ModUtil.getResource("stat_history");
     
     private static final Map<String, SlotType> TOOL_SLOT_TYPES;
     private static final Map<String, SlotType> ARMOR_SLOT_TYPES;
@@ -358,6 +363,7 @@ public class ToolLevellingUtil {
             }
         }
         data.putInt(EXPERIENCE_KEY, currentExperience);
+        tool.rebuildStats();
     }
     
     public static boolean isStaff(IToolContext tool) {

@@ -5,16 +5,18 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.settings.KeyModifier;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import pyre.tinkerslevellingaddon.ImprovableModifier;
 import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
 import pyre.tinkerslevellingaddon.config.Config;
 import pyre.tinkerslevellingaddon.util.ModUtil;
 import pyre.tinkerslevellingaddon.util.ToolLevellingUtil;
+import slimeknights.mantle.client.SafeClientAccess;
+import slimeknights.mantle.client.TooltipKey;
 import slimeknights.tconstruct.library.tools.helper.ModifierUtil;
 import slimeknights.tconstruct.library.tools.helper.TooltipUtil;
 import slimeknights.tconstruct.library.tools.nbt.ToolStack;
@@ -25,7 +27,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Mod.EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.FORGE)
+@EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
 public class TooltipEventHandler {
     
     private static final Component TOOLTIP_HOLD_ALT =  ModUtil.makeTranslation("tooltip", "hold_alt",
@@ -43,8 +45,8 @@ public class TooltipEventHandler {
 
     @SubscribeEvent
     static void onTooltipEvent(ItemTooltipEvent event) {
-        KeyModifier activeModifierKey = KeyModifier.getActiveModifier();
-        if (event.getEntity() == null || activeModifierKey == KeyModifier.CONTROL || activeModifierKey == KeyModifier.SHIFT) {
+        TooltipKey key = SafeClientAccess.getTooltipKey();
+        if (event.getEntity() == null || key == TooltipKey.CONTROL || key == TooltipKey.SHIFT) {
             return;
         }
 
@@ -54,16 +56,17 @@ public class TooltipEventHandler {
         }
 
         for (int i = event.getToolTip().size() - 1; i >= 0; i--) {
-            if (event.getToolTip().get(i) == TooltipUtil.TOOLTIP_HOLD_SHIFT ||
-                    event.getToolTip().get(i) == TooltipUtil.TOOLTIP_HOLD_CTRL) {
+            if (event.getToolTip().get(i).equals(TooltipUtil.TOOLTIP_HOLD_SHIFT) ||
+                    event.getToolTip().get(i).equals(TooltipUtil.TOOLTIP_HOLD_CTRL)) {
                 event.getToolTip().add(i + 1, TOOLTIP_HOLD_ALT);
                 break;
             }
         }
 
-        List<Component> infoEntries = new ArrayList<>();
+        List<Component> infoEntries;
         ToolStack tool = ToolStack.from(stack);
-        if (activeModifierKey == KeyModifier.ALT) {
+        if (key == TooltipKey.ALT) {
+            infoEntries = new ArrayList<>();
             infoEntries.add(event.getToolTip().get(0));
             infoEntries.addAll(prepareLevelInfo(tool));
             event.getToolTip().clear();
@@ -122,7 +125,7 @@ public class TooltipEventHandler {
             gainedStats.computeIfPresent(ToolLevellingUtil.KNOCKBACK_RESISTANCE, (k, v) -> v * 10);
             infoEntries.add(TOOLTIP_STATS_GAINED);
             for (Map.Entry<String, Double> entry : gainedStats.entrySet()) {
-                MutableComponent value = ModUtil.makeText(ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(entry.getValue()),
+                MutableComponent value = ModUtil.makeText(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(entry.getValue()),
                         ToolLevellingUtil.getStatColor(entry.getKey()));
                 infoEntries.add(ModUtil.makeTranslation("tooltip", "info.stats." + entry.getKey(), value));
             }
@@ -159,7 +162,7 @@ public class TooltipEventHandler {
                 if (nextStat.equals(ToolLevellingUtil.KNOCKBACK_RESISTANCE)) {
                     statValue *= 10;
                 }
-                MutableComponent value = ModUtil.makeText(ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(statValue),
+                MutableComponent value = ModUtil.makeText(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(statValue),
                         ToolLevellingUtil.getStatColor(nextStat));
                 MutableComponent name = ModUtil.makeTranslation("tooltip", "stat." + nextStat);
                 infoEntries.add(ModUtil.makeTranslation("tooltip", "info.next_level.stat", value, name));

@@ -10,7 +10,7 @@ import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
 public class ModUtil {
     
     public static ResourceLocation getResource(String name) {
-        return new ResourceLocation(TinkersLevellingAddon.MOD_ID, name);
+        return ResourceLocation.fromNamespaceAndPath(TinkersLevellingAddon.MOD_ID, name);
     }
     
     public static boolean canTranslate(String base, String name) {

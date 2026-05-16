@@ -5,12 +5,14 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
 
 import java.util.function.Consumer;
 
+@EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class ModCommands {
     
     /**
@@ -21,7 +23,7 @@ public class ModCommands {
     public static final DynamicCommandExceptionType TOOL_VALIDATION_ERROR = new DynamicCommandExceptionType(Component.class::cast);
     
     public static void init() {
-        MinecraftForge.EVENT_BUS.addListener(ModCommands::registerCommand);
+        // No longer needed with @EventBusSubscriber, but kept for compatibility if needed
     }
     
     private static void register(LiteralArgumentBuilder<CommandSourceStack> root, String name,
@@ -31,7 +33,8 @@ public class ModCommands {
         root.then(subCommand);
     }
     
-    private static void registerCommand(RegisterCommandsEvent event) {
+    @SubscribeEvent
+    public static void registerCommand(RegisterCommandsEvent event) {
         LiteralArgumentBuilder<CommandSourceStack> builder = Commands.literal(TinkersLevellingAddon.MOD_ID);
         
         // sub commands

@@ -1,36 +1,28 @@
 package pyre.tinkerslevellingaddon.setup;
 
-import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegisterEvent;
-import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
+import net.neoforged.neoforge.registries.DeferredHolder;
 import pyre.tinkerslevellingaddon.util.ModUtil;
 
-@Mod.EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public enum Sounds {
+import java.util.function.Supplier;
+
+public enum Sounds implements Supplier<SoundEvent> {
     CHIME("tool_level_up_chime"),
     SNARE_DRUM("tool_level_up_snare_drum"),
     YAY("tool_level_up_yay");
-    
-    private final SoundEvent sound;
-    
+
+    private final DeferredHolder<SoundEvent, SoundEvent> holder;
+
     Sounds(String name) {
-        sound = SoundEvent.createVariableRangeEvent(ModUtil.getResource(name));
+        this.holder = Registration.SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(ModUtil.getResource(name)));
     }
-    
-    @SubscribeEvent
-    public static void registerSounds(RegisterEvent event) {
-        if (event.getRegistryKey() == Registries.SOUND_EVENT) {
-            for (Sounds sound : values()) {
-                ForgeRegistries.SOUND_EVENTS.register(sound.sound.getLocation(), sound.getSound());
-            }
-        }
+
+    @Override
+    public SoundEvent get() {
+        return holder.get();
     }
-    
+
     public SoundEvent getSound() {
-        return sound;
+        return get();
     }
 }

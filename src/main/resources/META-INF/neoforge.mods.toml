@@ -1,36 +1,36 @@
 modLoader="javafml"
 loaderVersion="${loader_range}"
-license="MIT, https://spdx.org/licenses/MIT.html"
 issueTrackerURL="https://github.com/Pyre540/tinkers-levelling-addon/issues"
+logoFile="logo.png"
+license="MIT"
 
 [[mods]]
 modId="tinkerslevellingaddon"
 version="${version}"
 displayName="Tinkers' Levelling Addon"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/tinkers-levelling-addon/"
-logoFile="logo.png"
 authors="Pyre540"
 description='''
 Tinkers' Construct addon that adds tool leveling system.
 '''
 
 [[dependencies.tinkerslevellingaddon]]
-    modId="forge"
-    mandatory=true
-    versionRange="${forge_range}"
+    modId="neoforge"
+    type="required"
+    versionRange="${neoforge_range}"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.tinkerslevellingaddon]]
     modId="minecraft"
-    mandatory=true
+    type="required"
     versionRange="${minecraft_range}"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.tinkerslevellingaddon]]
     modId="tconstruct"
-    mandatory=true
+    type="required"
     versionRange="${tinkers_range}"
     ordering="NONE"
     side="BOTH"

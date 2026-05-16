@@ -1,37 +1,19 @@
 package pyre.tinkerslevellingaddon.network;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.sounds.SoundEvent;
-import pyre.tinkerslevellingaddon.ImprovableModifier;
 import pyre.tinkerslevellingaddon.config.Config;
 import pyre.tinkerslevellingaddon.util.ModUtil;
 
 public class ClientPacketHandler {
-
     public static void handleLevelUpMessage(int level, Component toolName) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null) {
-            return;
-        }
         if (Config.enableLevelUpMessage.get()) {
-            MutableComponent message;
-            if (ModUtil.canTranslate("message", "level_up." + level)) {
-                message = ModUtil.makeTranslation("message", "level_up." + level, toolName);
-            } else {
-                MutableComponent levelComponent = ModUtil.makeText(level, ChatFormatting.GOLD);
-                message = ModUtil.makeTranslation("message", "level_up.generic", toolName, levelComponent);
-            }
-            message.withStyle(style -> style.withColor(ImprovableModifier.IMPROVABLE_MODIFIER_COLOR));
-            player.displayClientMessage(message, false);
+            Minecraft.getInstance().gui.getChat().addMessage(ModUtil.makeTranslation("chat", "level_up", toolName, level));
         }
-        SoundEvent soundEvent = Config.levelUpSound.get().getSoundEvent();
-        if (soundEvent != null) {
-            player.level().playSound(player, player.getX(), player.getY(), player.getZ(),
-                    soundEvent, player.getSoundSource(), 1, 1);
+        Config.LevelUpSound sound = Config.levelUpSound.get();
+        if (sound != Config.LevelUpSound.NONE) {
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound.getSoundEvent(), 1.0F));
         }
     }
 }
