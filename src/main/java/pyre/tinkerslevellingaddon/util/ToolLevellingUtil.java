@@ -1,9 +1,9 @@
 package pyre.tinkerslevellingaddon.util;
 
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import pyre.tinkerslevellingaddon.config.Config;
 import pyre.tinkerslevellingaddon.network.LevelUpPacket;
 import pyre.tinkerslevellingaddon.network.Messages;
@@ -18,9 +18,11 @@ import slimeknights.tconstruct.library.tools.stat.ToolStats;
 
 import java.util.*;
 
-// import static pyre.tinkerslevellingaddon.ImprovableModule.*;
+import static pyre.tinkerslevellingaddon.ImprovableModule.*;
+import static pyre.tinkerslevellingaddon.util.ToolUtil.hasImprovable;
 
 public class ToolLevellingUtil {
+    public static final String NONE = "none";
     //slot types
     public static final String UPGRADE = "upgrades";
     public static final String ABILITY = "abilities";
@@ -40,11 +42,6 @@ public class ToolLevellingUtil {
     public static final String VELOCITY = "velocity";
     public static final String ACCURACY = "accuracy";
     public static final String PROJECTILE_DAMAGE = "projectileDamage";
-
-    public static final ResourceLocation EXPERIENCE_KEY = ModUtil.getResource("experience");
-    public static final ResourceLocation LEVEL_KEY = ModUtil.getResource("level");
-    public static final ResourceLocation SLOT_HISTORY_KEY = ModUtil.getResource("slot_history");
-    public static final ResourceLocation STAT_HISTORY_KEY = ModUtil.getResource("stat_history");
     
     private static final Map<String, SlotType> TOOL_SLOT_TYPES;
     private static final Map<String, SlotType> ARMOR_SLOT_TYPES;
@@ -60,12 +57,14 @@ public class ToolLevellingUtil {
     
     static {
         TOOL_SLOT_TYPES = new LinkedHashMap<>();
+        TOOL_SLOT_TYPES.put(NONE, null);
         TOOL_SLOT_TYPES.put(UPGRADE, SlotType.UPGRADE);
         TOOL_SLOT_TYPES.put(ABILITY, SlotType.ABILITY);
         TOOL_SLOT_TYPES.put(SOUL, SlotType.SOUL);
         TOOL_SLOT_TYPES.put(DEFENSE, SlotType.DEFENSE);
         
         ARMOR_SLOT_TYPES = new LinkedHashMap<>();
+        ARMOR_SLOT_TYPES.put(NONE, null);
         ARMOR_SLOT_TYPES.put(UPGRADE, SlotType.UPGRADE);
         ARMOR_SLOT_TYPES.put(ABILITY, SlotType.ABILITY);
         ARMOR_SLOT_TYPES.put(SOUL, SlotType.SOUL);
@@ -75,12 +74,14 @@ public class ToolLevellingUtil {
         ALL_SLOT_TYPES.putAll(ARMOR_SLOT_TYPES);
         
         TOOL_STAT_TYPES = new LinkedHashMap<>();
+        TOOL_STAT_TYPES.put(NONE, null);
         TOOL_STAT_TYPES.put(DURABILITY, ToolStats.DURABILITY);
         TOOL_STAT_TYPES.put(ATTACK_DAMAGE, ToolStats.ATTACK_DAMAGE);
         TOOL_STAT_TYPES.put(ATTACK_SPEED, ToolStats.ATTACK_SPEED);
         TOOL_STAT_TYPES.put(MINING_SPEED, ToolStats.MINING_SPEED);
     
         RANGED_STAT_TYPES = new LinkedHashMap<>();
+        RANGED_STAT_TYPES.put(NONE, null);
         RANGED_STAT_TYPES.put(DRAW_SPEED, ToolStats.DRAW_SPEED);
         RANGED_STAT_TYPES.put(VELOCITY, ToolStats.VELOCITY);
         RANGED_STAT_TYPES.put(ACCURACY, ToolStats.ACCURACY);
@@ -90,12 +91,14 @@ public class ToolLevellingUtil {
         RANGED_STAT_TYPES.put(ATTACK_SPEED, ToolStats.ATTACK_SPEED);
         
         ARMOR_STAT_TYPES = new LinkedHashMap<>();
+        ARMOR_STAT_TYPES.put(NONE, null);
         ARMOR_STAT_TYPES.put(DURABILITY, ToolStats.DURABILITY);
         ARMOR_STAT_TYPES.put(ARMOR, ToolStats.ARMOR);
         ARMOR_STAT_TYPES.put(ARMOR_TOUGHNESS, ToolStats.ARMOR_TOUGHNESS);
         ARMOR_STAT_TYPES.put(KNOCKBACK_RESISTANCE, ToolStats.KNOCKBACK_RESISTANCE);
         
         STAFF_STAT_TYPES = new LinkedHashMap<>();
+        STAFF_STAT_TYPES.put(NONE, null);
         STAFF_STAT_TYPES.put(DRAW_SPEED, ToolStats.DRAW_SPEED);
         STAFF_STAT_TYPES.put(VELOCITY, ToolStats.VELOCITY);
         STAFF_STAT_TYPES.put(ACCURACY, ToolStats.ACCURACY);
@@ -199,7 +202,7 @@ public class ToolLevellingUtil {
         return Config.toolsStatGainingMethod.get() == Config.GainingMethod.PREDEFINED_ORDER;
     }
     
-    public static String getSlot(ToolStack tool, int level) {
+    public static String getSlot(IToolStackView tool, int level) {
         if (isStaff(tool)) {
             return switch (Config.staffSlotGainingMethod.get()) {
                 case NONE -> null;
@@ -231,7 +234,7 @@ public class ToolLevellingUtil {
         };
     }
     
-    public static String getStat(ToolStack tool, int level) {
+    public static String getStat(IToolStackView tool, int level) {
         if (isStaff(tool)) {
             return switch (Config.staffStatGainingMethod.get()) {
                 case NONE -> null;
@@ -284,12 +287,15 @@ public class ToolLevellingUtil {
     public static List<SlotType> parseSlotsHistory(String historyString) {
         ArrayList<SlotType> result = new ArrayList<>();
         if (!historyString.isBlank()) {
-            for (String statString : historyString.split(";")) {
-                SlotType stat = ALL_SLOT_TYPES.get(statString);
-                if (stat != null) {
-                    result.add(stat);
+            for (String slotString : historyString.split(";")) {
+                if (slotString.equals(NONE)) {
+                    continue;
+                }
+                SlotType slot = ALL_SLOT_TYPES.get(slotString);
+                if (slot != null) {
+                    result.add(slot);
                 } else {
-                    throw new UnsupportedOperationException("Unsupported slot type " + statString);
+                    throw new UnsupportedOperationException("Unsupported slot type " + slotString);
                 }
             }
         }
@@ -300,6 +306,9 @@ public class ToolLevellingUtil {
         ArrayList<FloatToolStat> result = new ArrayList<>();
         if (!historyString.isBlank()) {
             for (String statString : historyString.split(";")) {
+                if (statString.equals(NONE)) {
+                    continue;
+                }
                 FloatToolStat stat = ALL_STAT_TYPES.get(statString);
                 if (stat != null) {
                     result.add(stat);
@@ -316,17 +325,18 @@ public class ToolLevellingUtil {
     }
     
     public static int getXpNeededForLevel(int level, boolean isBroadTool) {
-        int experienceNeeded = Config.baseExperience.get();
-        if (level > 1) {
-            experienceNeeded = (int) (getXpNeededForLevel(level - 1, false) * Config.requiredXpMultiplier.get());
-        }
+        double base = Config.baseExperience.get();
+        double multiplier = Config.requiredXpMultiplier.get();
+        
+        double experienceNeeded = base * Math.pow(multiplier, Math.max(1, level) - 1.0);
+        
         if (isBroadTool) {
             experienceNeeded *= Config.broadToolRequiredXpMultiplier.get();
         }
-        return experienceNeeded;
+        return (int) Math.min(experienceNeeded, Integer.MAX_VALUE);
     }
     
-    public static void addExperience(ToolStack tool, int amount, ServerPlayer player) {
+    public static void addExperience(IToolStackView tool, int amount) {
         if (tool == null) {
             return;
         }
@@ -334,36 +344,45 @@ public class ToolLevellingUtil {
         ModDataNBT data = tool.getPersistentData();
         int currentLevel = data.getInt(LEVEL_KEY);
         int currentExperience = data.getInt(EXPERIENCE_KEY) + amount;
-        boolean isBroadTool = ToolLevellingUtil.isBroadTool(tool);
-        int experienceNeeded = ToolLevellingUtil.getXpNeededForLevel(currentLevel + 1, isBroadTool);
+        boolean isBroadTool = isBroadTool(tool);
+        int experienceNeeded = getXpNeededForLevel(currentLevel + 1, isBroadTool);
         
         while (currentExperience >= experienceNeeded) {
-            if (!ToolLevellingUtil.canLevelUp(currentLevel)) {
+            if (!canLevelUp(currentLevel)) {
                 return;
             }
             data.putInt(LEVEL_KEY, ++currentLevel);
             currentExperience -= experienceNeeded;
-            experienceNeeded = ToolLevellingUtil.getXpNeededForLevel(currentLevel + 1, isBroadTool);
+            experienceNeeded = getXpNeededForLevel(currentLevel + 1, isBroadTool);
             
-            String slotName = ToolLevellingUtil.getSlot(tool, currentLevel);
+            String slotName = getSlot(tool, currentLevel);
             if (slotName != null) {
                 appendHistory(SLOT_HISTORY_KEY, slotName, data);
             }
-            String statName = ToolLevellingUtil.getStat(tool, currentLevel);
+            String statName = getStat(tool, currentLevel);
             if (statName != null) {
                 appendHistory(STAT_HISTORY_KEY, statName, data);
             }
             
-            //temporarily set xp to 0, so it displays nicely in chat message
-            data.putInt(EXPERIENCE_KEY, 0);
-            tool.rebuildStats();
-            if (player != null) {
-                Component toolName = tool.createStack().getDisplayName();
-                Messages.sendToPlayer(new LevelUpPacket(currentLevel, toolName), player);
-            }
+            data.putInt(PENDING_LEVEL_UP_KEY, currentLevel);
         }
         data.putInt(EXPERIENCE_KEY, currentExperience);
-        tool.rebuildStats();
+    }
+    
+    public static void processPendingLevelUp(ServerPlayer player, ItemStack itemStack) {
+        if (hasImprovable(itemStack)) {
+            ToolStack tool = ToolStack.from(itemStack);
+            ModDataNBT data = tool.getPersistentData();
+            if (data.contains(PENDING_LEVEL_UP_KEY)) {
+                ToolStack toolCopy = tool.copy();
+                toolCopy.getPersistentData().putInt(EXPERIENCE_KEY, 0);
+                Messages.sendToPlayer(new LevelUpPacket(data.getInt(PENDING_LEVEL_UP_KEY),
+                        toolCopy.createStack().getDisplayName()), player);
+                
+                data.remove(PENDING_LEVEL_UP_KEY);
+                tool.rebuildStats();
+            }
+        }
     }
     
     public static boolean isStaff(IToolContext tool) {

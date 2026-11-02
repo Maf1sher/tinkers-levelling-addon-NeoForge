@@ -39,6 +39,7 @@ import net.neoforged.neoforge.common.ItemAbility;
 import net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent;
 import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.jetbrains.annotations.Nullable;
 import pyre.tinkerslevellingaddon.config.Config;
 import pyre.tinkerslevellingaddon.setup.AddonModifierIds;
@@ -102,6 +103,7 @@ import java.util.List;
 import java.util.Random;
 
 import static pyre.tinkerslevellingaddon.util.ToolLevellingUtil.addExperience;
+import static pyre.tinkerslevellingaddon.util.ToolLevellingUtil.processPendingLevelUp;
 
 @EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook, ShearsModifierHook,
@@ -125,6 +127,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
     public static final ResourceLocation LEVEL_KEY = ModUtil.getResource("level");
     public static final ResourceLocation SLOT_HISTORY_KEY = ModUtil.getResource("slot_history");
     public static final ResourceLocation STAT_HISTORY_KEY = ModUtil.getResource("stat_history");
+    public static final ResourceLocation PENDING_LEVEL_UP_KEY = ModUtil.getResource("pending_level_up");
 
     private static final Random RANDOM = new Random();
 
@@ -149,6 +152,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
         tool.getPersistentData().remove(LEVEL_KEY);
         tool.getPersistentData().remove(SLOT_HISTORY_KEY);
         tool.getPersistentData().remove(STAT_HISTORY_KEY);
+        tool.getPersistentData().remove(PENDING_LEVEL_UP_KEY);
         return null;
     }
 
@@ -174,36 +178,42 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
         }
     }
 
-    @Override
-    public void afterBlockBreak(IToolStackView tool, ModifierEntry modifier, ToolHarvestContext context) {
-        ServerPlayer player = context.getPlayer();
-        if (!Config.enableMiningXp.get() || !context.isEffective() || player == null) {
+    @SubscribeEvent
+    static void onPlayerTick(PlayerTickEvent.Post event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) {
             return;
         }
-        if (tool instanceof ToolStack toolStack) {
-            addExperience(toolStack, 1 + Config.bonusMiningXp.get(), player);
+        for (ItemStack itemStack : player.getInventory().armor) {
+            processPendingLevelUp(player, itemStack);
+        }
+        for (ItemStack itemStack : player.getInventory().items) {
+            processPendingLevelUp(player, itemStack);
+        }
+        for (ItemStack itemStack : player.getInventory().offhand) {
+            processPendingLevelUp(player, itemStack);
+        }
+    }
+
+    @Override
+    public void afterBlockBreak(IToolStackView tool, ModifierEntry modifier, ToolHarvestContext context) {
+        if (Config.enableMiningXp.get() && context.isEffective()) {
+            addExperience(tool, 1 + Config.bonusMiningXp.get());
         }
     }
 
     @Override
     public void afterHarvest(IToolStackView tool, ModifierEntry modifier, UseOnContext context, ServerLevel world,
                              BlockState state, BlockPos pos) {
-        if (!Config.enableHarvestingXp.get() || !(context.getPlayer() instanceof ServerPlayer player)) {
-            return;
-        }
-        if (tool instanceof ToolStack toolStack) {
-            addExperience(toolStack, 1 + Config.bonusHarvestingXp.get(), player);
+        if (Config.enableHarvestingXp.get()) {
+            addExperience(tool, 1 + Config.bonusHarvestingXp.get());
         }
     }
 
     @Override
     public void afterShearEntity(IToolStackView tool, ModifierEntry modifier, Player player, Entity entity,
                                  boolean isTarget) {
-        if (!Config.enableShearingXp.get() || !(player instanceof ServerPlayer playerServer)) {
-            return;
-        }
-        if (tool instanceof ToolStack toolStack) {
-            addExperience(toolStack, 1 + Config.bonusShearingXp.get(), playerServer);
+        if (Config.enableShearingXp.get()) {
+            addExperience(tool, 1 + Config.bonusShearingXp.get());
         }
     }
 
@@ -216,7 +226,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
         }
         if (tool instanceof ToolStack toolStack) {
             int xp = (Config.damageDealt.get() ? Math.round(damageDealt) : 1) + Config.bonusAttackingXp.get();
-            addExperience(toolStack, xp, player);
+            addExperience(toolStack, xp);
             //handle aoe hits
             MeleeHitToolHook hook = tool.getDefinitionData().getHook(ToolHooks.MELEE_HIT);
             if (hook instanceof SweepWeaponAttack sweepHook) {
@@ -243,7 +253,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
             }
             int xp = (Config.damageTaken.get() ? Math.round(amount - damageBlocked) : 1) + Config.bonusTakingDamageXp.get()
                     + getThornsBonus(tool);
-            addExperience(toolStack, xp, player);
+            addExperience(toolStack, xp);
         }
     }
 
@@ -251,45 +261,34 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
     public void onProjectileLaunch(IToolStackView tool, ModifierEntry modifier, LivingEntity shooter,
                                    Projectile projectile, @Nullable AbstractArrow arrow, ModDataNBT persistentData,
                                    boolean primary) {
-        if (!Config.enableShootingXp.get() || !(shooter instanceof ServerPlayer player)) {
-            return;
-        }
-        if (tool instanceof ToolStack toolStack) {
-            addExperience(toolStack, 1 + Config.bonusShootingXp.get(), player);
+        if (Config.enableShootingXp.get()) {
+            addExperience(tool, 1 + Config.bonusShootingXp.get());
         }
     }
 
     @Override
     public void afterTransformBlock(IToolStackView tool, ModifierEntry modifier, UseOnContext context,
                                     BlockState state, BlockPos pos, ItemAbility action) {
-        if (!(context.getPlayer() instanceof ServerPlayer player)) {
-            return;
-        }
-
-        if (tool instanceof ToolStack toolStack) {
-            if (Config.enableStrippingXp.get() && action.equals(ItemAbilities.AXE_STRIP)) {
-                addExperience(toolStack, 1 + Config.bonusStrippingXp.get(), player);
-            } else if(Config.enableScrappingXp.get() && action.equals(ItemAbilities.AXE_SCRAPE)) {
-                addExperience(toolStack, 1 + Config.bonusScrappingXp.get(), player);
-            } else if(Config.enableWaxingOffXp.get() && action.equals(ItemAbilities.AXE_WAX_OFF)) {
-                addExperience(toolStack, 1 + Config.bonusWaxingOffXp.get(), player);
-            } else if(Config.enableTillingXp.get() && action.equals(ItemAbilities.HOE_TILL)) {
-                addExperience(toolStack, 1 + Config.bonusTillingXp.get(), player);
-            } else if(Config.enablePathMakingXp.get() && action.equals(ItemAbilities.SHOVEL_FLATTEN)) {
-                addExperience(toolStack, 1 + Config.bonusPathMakingXp.get(), player);
-            }
+        if (Config.enableStrippingXp.get() && action.equals(ItemAbilities.AXE_STRIP)) {
+            addExperience(tool, 1 + Config.bonusStrippingXp.get());
+        } else if (Config.enableScrappingXp.get() && action.equals(ItemAbilities.AXE_SCRAPE)) {
+            addExperience(tool, 1 + Config.bonusScrappingXp.get());
+        } else if (Config.enableWaxingOffXp.get() && action.equals(ItemAbilities.AXE_WAX_OFF)) {
+            addExperience(tool, 1 + Config.bonusWaxingOffXp.get());
+        } else if (Config.enableTillingXp.get() && action.equals(ItemAbilities.HOE_TILL)) {
+            addExperience(tool, 1 + Config.bonusTillingXp.get());
+        } else if (Config.enablePathMakingXp.get() && action.equals(ItemAbilities.SHOVEL_FLATTEN)) {
+            addExperience(tool, 1 + Config.bonusPathMakingXp.get());
         }
     }
 
     @Override
     public boolean elytraFlightTick(IToolStackView tool, ModifierEntry modifier, LivingEntity entity, int flightTicks) {
-        if (!Config.enableFlyingXp.get() || !(entity instanceof ServerPlayer player)) {
+        if (!Config.enableFlyingXp.get()) {
             return false;
         }
-        if (tool instanceof ToolStack toolStack) {
-            if (flightTicks > 0 && (flightTicks % Config.flyingTime.get()) == 0) {
-                addExperience(toolStack, 1 + Config.bonusFlyingXp.get(), player);
-            }
+        if (flightTicks > 0 && (flightTicks % Config.flyingTime.get()) == 0) {
+            addExperience(tool, 1 + Config.bonusFlyingXp.get());
         }
         return false;
     }
@@ -311,7 +310,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
             if (!tool.isBroken() && canBlock(player, event.getDamageSource().getSourcePosition(), blockAngle)) {
                 int xp = (int) ((Config.damageBlocked.get() ? Math.min(event.getBlockedDamage(),
                         tool.getStats().get(ToolStats.BLOCK_AMOUNT)) : 1) + Config.bonusBlockingDamageXp.get());
-                addExperience(tool, xp, player);
+                addExperience(tool, xp);
             }
         }
     }
@@ -385,7 +384,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 event.getEntry().getId().equals(ModifierIds.warping) &&
                 tool.getModifierLevel(AddonModifierIds.IMPROVABLE) > 0) {
             if (tool instanceof ToolStack toolStack) {
-                addExperience(toolStack, 1 + Config.bonusWarpingXp.get(), player);
+                addExperience(toolStack, 1 + Config.bonusWarpingXp.get());
             }
         }
     }
@@ -430,7 +429,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 && tool.getModifier(ModifierIds.firestarter) != ModifierEntry.EMPTY
                 && tool.getHook(ToolHooks.INTERACTION).canInteract(tool, ModifierIds.firestarter,
                 InteractionSource.RIGHT_CLICK)) {
-            addExperience(tool, 1 + Config.bonusFirestarterXp.get(), player);
+            addExperience(tool, 1 + Config.bonusFirestarterXp.get());
         }
     }
 
@@ -450,7 +449,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 && tool.getModifier(ModifierIds.firestarter) != ModifierEntry.EMPTY
                 && tool.getHook(ToolHooks.INTERACTION).canInteract(tool, ModifierIds.firestarter,
                 InteractionSource.LEFT_CLICK)) {
-            addExperience(tool, 1 + Config.bonusFirestarterXp.get(), player);
+            addExperience(tool, 1 + Config.bonusFirestarterXp.get());
         }
     }
 
@@ -560,7 +559,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
             if (aoeTarget != player && aoeTarget != target && !player.isAlliedTo(aoeTarget)
                     && !(aoeTarget instanceof ArmorStand) && target.distanceToSqr(aoeTarget) < range * range) {
                 int xp = (Config.damageDealt.get() ? Math.round(damage) : 1) + Config.bonusAttackingXp.get();
-                addExperience(toolStack, xp, player);
+                addExperience(toolStack, xp);
             }
         }
     }
@@ -581,7 +580,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                     BlockState original = player.level().getBlockState(mutable);
                     BlockState transformed = original.getToolModifiedState(context, module.action(), true);
                     if (transformed != null) {
-                        addExperience(toolStack, xp, player);
+                        addExperience(toolStack, xp);
                     }
                 }
             }
@@ -598,7 +597,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, 0, -radius), center.offset(radius, 0, radius))) {
             if (pos.closerToCenterThan(player.position(), trueRadius)) {
                 if (world.isEmptyBlock(pos) && module.state().canSurvive(world, pos)) {
-                    addExperience(toolStack, xp, player);
+                    addExperience(toolStack, xp);
                 }
             }
         }
@@ -619,7 +618,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 BlockState state = Blocks.FROSTED_ICE.defaultBlockState();
                 if (world.getBlockState(mutable).is(Blocks.WATER) && state.canSurvive(world, mutable) &&
                         world.isUnobstructed(state, mutable, CollisionContext.empty())) {
-                    addExperience(toolStack, xp, player);
+                    addExperience(toolStack, xp);
                 }
             }
         }
@@ -633,7 +632,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
         for (BlockPos pos : BlockPos.betweenClosed(center.offset(-radius, 0, -radius), center.offset(radius, 0, radius))) {
             if (pos.closerToCenterThan(player.position(), trueRadius)) {
                 if (BaseFireBlock.canBePlacedAt(player.level(), pos, player.getDirection())) {
-                    addExperience(toolStack, xp, player);
+                    addExperience(toolStack, xp);
                 }
             }
         }
@@ -642,12 +641,12 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
     private static void handleFlinging(ServerPlayer player, ToolStack tool) {
         BlockHitResult mop = ModifiableItem.blockRayTrace(player.level(), player, ClipContext.Fluid.NONE);
         if (mop.getType() == HitResult.Type.BLOCK) {
-            addExperience(tool, 1 + Config.bonusFlingingXp.get(), player);
+            addExperience(tool, 1 + Config.bonusFlingingXp.get());
         }
     }
 
     private static void handleSpringing(ServerPlayer player, ToolStack tool) {
-        addExperience(tool, 1 + Config.bonusSpringingXp.get(), player);
+        addExperience(tool, 1 + Config.bonusSpringingXp.get());
     }
 
     private static void handleBonking(ServerPlayer player, ToolStack tool) {
@@ -664,7 +663,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
             double targetDist = start.distanceToSqr(target.getEyePosition(1F));
             BlockHitResult mop = ModifiableItem.blockRayTrace(player.level(), player, ClipContext.Fluid.NONE);
             if (mop.getType() != HitResult.Type.BLOCK || targetDist < mop.getBlockPos().distToCenterSqr(start)) {
-                addExperience(tool, 1 + Config.bonusBonkingXp.get(), player);
+                addExperience(tool, 1 + Config.bonusBonkingXp.get());
             }
         }
     }
@@ -689,7 +688,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
         Direction face = event.getFace();
         BlockPos pos = event.getPos().relative(face);
         if (canPlaceGlow(world, pos, face.getOpposite())) {
-            addExperience(tool, 1 + Config.bonusGlowingXp.get(), (ServerPlayer) context.getPlayer());
+            addExperience(tool, 1 + Config.bonusGlowingXp.get());
         }
     }
 
@@ -705,7 +704,7 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 if (pos.closerToCenterThan(player.position(), trueRadius)) {
                     if (world.isEmptyBlock(pos) && world.getBrightness(LightLayer.BLOCK, pos) < 3) {
                         if (canPlaceGlow(world, pos, Direction.DOWN)) {
-                            addExperience(toolStack, xp, player);
+                            addExperience(toolStack, xp);
                             return;
                         }
                     }
@@ -765,11 +764,11 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
 
         Direction horizontalFacing = player.getDirection();
         if (!targetingFire && canIgnite(world, pos, state, sideHit, horizontalFacing)) {
-            addExperience(tool, 1 + Config.bonusFirestarterXp.get(), player);
+            addExperience(tool, 1 + Config.bonusFirestarterXp.get());
         }
         for (BlockPos target : targets) {
             if (canIgnite(world, target, world.getBlockState(target), sideHit, horizontalFacing)) {
-                addExperience(tool, 1 + Config.bonusFirestarterXp.get(), player);
+                addExperience(tool, 1 + Config.bonusFirestarterXp.get());
             }
         }
     }

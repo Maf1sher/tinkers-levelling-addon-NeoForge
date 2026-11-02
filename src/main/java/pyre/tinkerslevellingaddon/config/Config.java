@@ -517,7 +517,7 @@ public class Config {
                 .define("plowing", true);
         
         enablePathMakerXp = builder.translation("config.tinkerslevellingaddon.levelling.path_maker")
-                .define("path__maker", true);
+                .define("path_maker", true);
         
         enableSnowdriftXp = builder.translation("config.tinkerslevellingaddon.levelling.snowdrift")
                 .define("snowdrift", true);
