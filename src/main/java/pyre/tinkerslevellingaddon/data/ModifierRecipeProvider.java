@@ -36,8 +36,8 @@ public class ModifierRecipeProvider extends RecipeProvider implements ICondition
                 .addInput(Items.EXPERIENCE_BOTTLE)
                 .setSlots(SlotType.ABILITY, 1)
                 .setMaxLevel(1)
-                .saveSalvage(consumer, prefix(improvableId.location(), abilitySalvage))
-                .save(consumer, prefix(improvableId.location(), abilityFolder));
+                .saveSalvage(consumer, prefix(improvableId.getLocation(), abilitySalvage))
+                .save(consumer, prefix(improvableId.getLocation(), abilityFolder));
     }
 
     /* IRecipeHelper helpers */
