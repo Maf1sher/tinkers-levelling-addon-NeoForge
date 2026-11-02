@@ -3,18 +3,23 @@
   "allow_crystal": true,
   "inputs": [
     {
+      "count": 1,
       "item": "minecraft:experience_bottle"
     },
     {
+      "count": 1,
       "item": "minecraft:nether_star"
     },
     {
+      "count": 1,
       "item": "minecraft:experience_bottle"
     },
     {
+      "count": 1,
       "item": "minecraft:experience_bottle"
     },
     {
+      "count": 1,
       "item": "minecraft:experience_bottle"
     }
   ],
