@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import pyre.tinkerslevellingaddon.command.ModCommands;
 import pyre.tinkerslevellingaddon.config.Config;
 import pyre.tinkerslevellingaddon.data.ColorProvider;
+import pyre.tinkerslevellingaddon.data.ModifierProvider;
 import pyre.tinkerslevellingaddon.data.ModifierRecipeProvider;
 import pyre.tinkerslevellingaddon.data.ModifierTagProvider;
 import pyre.tinkerslevellingaddon.setup.Registration;
@@ -37,6 +38,7 @@ public class TinkersLevellingAddon {
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
         generator.addProvider(event.includeServer(), new ModifierTagProvider(packOutput, existingFileHelper));
+        generator.addProvider(event.includeServer(), new ModifierProvider(packOutput));
         generator.addProvider(event.includeServer(), new ModifierRecipeProvider(packOutput, event.getLookupProvider()));
         generator.addProvider(event.includeClient(), new ColorProvider(packOutput));
     }

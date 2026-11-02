@@ -18,7 +18,7 @@ import slimeknights.tconstruct.library.tools.stat.ToolStats;
 
 import java.util.*;
 
-// import static pyre.tinkerslevellingaddon.ImprovableModifier.*;
+// import static pyre.tinkerslevellingaddon.ImprovableModule.*;
 
 public class ToolLevellingUtil {
     //slot types

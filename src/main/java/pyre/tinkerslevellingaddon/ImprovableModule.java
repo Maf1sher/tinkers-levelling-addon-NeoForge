@@ -41,9 +41,11 @@ import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import org.jetbrains.annotations.Nullable;
 import pyre.tinkerslevellingaddon.config.Config;
-import pyre.tinkerslevellingaddon.setup.Registration;
+import pyre.tinkerslevellingaddon.setup.AddonModifierIds;
 import pyre.tinkerslevellingaddon.util.ModUtil;
 import pyre.tinkerslevellingaddon.util.ToolLevellingUtil;
+import slimeknights.mantle.data.loadable.record.RecordLoadable;
+import slimeknights.mantle.data.loadable.record.SingletonLoader;
 import slimeknights.tconstruct.common.TinkerTags;
 import slimeknights.tconstruct.library.events.teleport.SlingModifierTeleportEvent;
 import slimeknights.tconstruct.library.modifiers.Modifier;
@@ -64,11 +66,12 @@ import slimeknights.tconstruct.library.modifiers.hook.ranged.ProjectileLaunchMod
 import slimeknights.tconstruct.library.modifiers.hook.special.BlockTransformModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.special.PlantHarvestModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.special.ShearsModifierHook;
-import slimeknights.tconstruct.library.modifiers.impl.NoLevelsModifier;
+import slimeknights.tconstruct.library.modifiers.modules.ModifierModule;
 import slimeknights.tconstruct.library.modifiers.modules.armor.CoverGroundWalkerModule;
 import slimeknights.tconstruct.library.modifiers.modules.armor.ReplaceBlockWalkerModule;
 import slimeknights.tconstruct.library.modifiers.modules.armor.ToolActionWalkerTransformModule;
-import slimeknights.tconstruct.library.module.ModuleHookMap;
+import slimeknights.tconstruct.library.module.HookProvider;
+import slimeknights.tconstruct.library.module.ModuleHook;
 import slimeknights.tconstruct.library.tools.SlotType;
 import slimeknights.tconstruct.library.tools.context.EquipmentContext;
 import slimeknights.tconstruct.library.tools.context.ToolAttackContext;
@@ -101,10 +104,20 @@ import java.util.Random;
 import static pyre.tinkerslevellingaddon.util.ToolLevellingUtil.addExperience;
 
 @EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
-public class ImprovableModifier extends NoLevelsModifier implements PlantHarvestModifierHook, ShearsModifierHook,
+public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook, ShearsModifierHook,
         BlockBreakModifierHook, BlockTransformModifierHook, ProjectileLaunchModifierHook, OnAttackedModifierHook,
         MeleeHitModifierHook, ElytraFlightModifierHook, ArmorWalkModifierHook, ModifierRemovalHook,
         VolatileDataModifierHook, ToolStatsModifierHook {
+    INSTANCE;
+
+    private static final List<ModuleHook<?>> DEFAULT_HOOKS =
+            HookProvider.<ImprovableModule>defaultHooks(ModifierHooks.PLANT_HARVEST, ModifierHooks.SHEAR_ENTITY,
+                    ModifierHooks.BLOCK_TRANSFORM, ModifierHooks.PROJECTILE_LAUNCH, ModifierHooks.BLOCK_BREAK,
+                    ModifierHooks.ON_ATTACKED, ModifierHooks.MELEE_HIT, ModifierHooks.ELYTRA_FLIGHT,
+                    ModifierHooks.BOOT_WALK, ModifierHooks.VOLATILE_DATA, ModifierHooks.TOOL_STATS,
+                    ModifierHooks.REMOVE);
+
+    public static final RecordLoadable<ImprovableModule> LOADER = new SingletonLoader<>(INSTANCE);
 
     public static final TextColor IMPROVABLE_MODIFIER_COLOR = TextColor.fromRgb(9337340);
 
@@ -116,16 +129,17 @@ public class ImprovableModifier extends NoLevelsModifier implements PlantHarvest
     private static final Random RANDOM = new Random();
 
     @Override
-    protected void registerHooks(ModuleHookMap.Builder hookBuilder) {
-        super.registerHooks(hookBuilder);
-        hookBuilder.addHook(this, ModifierHooks.PLANT_HARVEST, ModifierHooks.SHEAR_ENTITY,
-                ModifierHooks.BLOCK_TRANSFORM, ModifierHooks.PROJECTILE_LAUNCH, ModifierHooks.BLOCK_BREAK,
-                ModifierHooks.ON_ATTACKED, ModifierHooks.MELEE_HIT, ModifierHooks.ELYTRA_FLIGHT,
-                ModifierHooks.BOOT_WALK, ModifierHooks.VOLATILE_DATA, ModifierHooks.TOOL_STATS, ModifierHooks.REMOVE);
+    public RecordLoadable<? extends ModifierModule> getLoader() {
+        return LOADER;
     }
 
     @Override
-    public int getPriority() {
+    public List<ModuleHook<?>> getDefaultHooks() {
+        return DEFAULT_HOOKS;
+    }
+
+    @Override
+    public Integer getPriority() {
         return 300;
     }
 
@@ -287,7 +301,7 @@ public class ImprovableModifier extends NoLevelsModifier implements PlantHarvest
         }
         LivingEntity entity = event.getEntity();
         ItemStack activeStack = entity.getUseItem();
-        if (ModifierUtil.getModifierLevel(activeStack, Registration.IMPROVABLE.get().getId()) <= 0) {
+        if (ModifierUtil.getModifierLevel(activeStack, AddonModifierIds.IMPROVABLE) <= 0) {
             return;
         }
         if (!activeStack.isEmpty() && activeStack.is(TinkerTags.Items.MODIFIABLE)
@@ -369,7 +383,7 @@ public class ImprovableModifier extends NoLevelsModifier implements PlantHarvest
         IToolStackView tool = event.getTool();
         if (Config.enableWarpingXp.get() && event.getEntity() instanceof ServerPlayer player &&
                 event.getEntry().getId().equals(ModifierIds.warping) &&
-                tool.getModifierLevel(Registration.IMPROVABLE.get().getId()) > 0) {
+                tool.getModifierLevel(AddonModifierIds.IMPROVABLE) > 0) {
             if (tool instanceof ToolStack toolStack) {
                 addExperience(toolStack, 1 + Config.bonusWarpingXp.get(), player);
             }

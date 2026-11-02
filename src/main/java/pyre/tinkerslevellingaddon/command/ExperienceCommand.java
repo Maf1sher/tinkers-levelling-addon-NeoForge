@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
-import pyre.tinkerslevellingaddon.setup.Registration;
+import pyre.tinkerslevellingaddon.setup.AddonModifierIds;
 import pyre.tinkerslevellingaddon.util.ModUtil;
 import pyre.tinkerslevellingaddon.util.ToolLevellingUtil;
 import slimeknights.tconstruct.library.tools.helper.ModifierUtil;
@@ -21,8 +21,8 @@ import slimeknights.tconstruct.shared.command.HeldModifiableItemIterator;
 
 import java.util.List;
 
-import static pyre.tinkerslevellingaddon.ImprovableModifier.EXPERIENCE_KEY;
-import static pyre.tinkerslevellingaddon.ImprovableModifier.LEVEL_KEY;
+import static pyre.tinkerslevellingaddon.ImprovableModule.EXPERIENCE_KEY;
+import static pyre.tinkerslevellingaddon.ImprovableModule.LEVEL_KEY;
 import static pyre.tinkerslevellingaddon.command.ModCommands.PERMISSION_GAME_COMMANDS;
 
 public class ExperienceCommand {
@@ -49,7 +49,7 @@ public class ExperienceCommand {
     private static int run(CommandContext<CommandSourceStack> context, ModCommands.Operation op, int count)
             throws CommandSyntaxException {
         List<LivingEntity> successes = HeldModifiableItemIterator.apply(context, (living, stack) -> {
-            if (ModifierUtil.getModifierLevel(stack, Registration.IMPROVABLE.get().getId()) <= 0) {
+            if (ModifierUtil.getModifierLevel(stack, AddonModifierIds.IMPROVABLE) <= 0) {
                 return false;
             }
             

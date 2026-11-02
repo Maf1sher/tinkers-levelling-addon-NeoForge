@@ -1,7 +1,7 @@
 package pyre.tinkerslevellingaddon.data;
 
 import net.minecraft.data.PackOutput;
-import pyre.tinkerslevellingaddon.ImprovableModifier;
+import pyre.tinkerslevellingaddon.ImprovableModule;
 import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
 import pyre.tinkerslevellingaddon.data.generator.MantleColorGenerator;
 import pyre.tinkerslevellingaddon.setup.AddonModifierIds;
@@ -14,7 +14,7 @@ public class ColorProvider extends MantleColorGenerator {
 
     @Override
     protected void addColors() {
-        addModifier(AddonModifierIds.IMPROVABLE, ImprovableModifier.IMPROVABLE_MODIFIER_COLOR.toString());
+        addModifier(AddonModifierIds.IMPROVABLE, ImprovableModule.IMPROVABLE_MODIFIER_COLOR.toString());
     }
 
     @Override
