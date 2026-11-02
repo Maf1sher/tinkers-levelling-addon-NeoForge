@@ -20,6 +20,7 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.FishingHook;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
@@ -27,6 +28,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.storage.loot.LootContext;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -36,6 +41,10 @@ import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.common.ItemAbility;
 import net.neoforged.neoforge.event.EventHooks;
 import net.neoforged.neoforge.event.entity.living.LivingShieldBlockEvent;
+import net.neoforged.neoforge.event.entity.player.ItemFishedEvent;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.FluidType;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import org.jetbrains.annotations.Nullable;
 import pyre.tinkerslevellingaddon.config.Config;
@@ -47,6 +56,9 @@ import slimeknights.mantle.data.loadable.record.SingletonLoader;
 import slimeknights.tconstruct.library.modifiers.Modifier;
 import slimeknights.tconstruct.library.modifiers.ModifierEntry;
 import slimeknights.tconstruct.library.modifiers.ModifierHooks;
+import slimeknights.tconstruct.library.modifiers.fluid.FluidEffectContext;
+import slimeknights.tconstruct.library.modifiers.fluid.FluidEffectManager;
+import slimeknights.tconstruct.library.modifiers.fluid.FluidEffects;
 import slimeknights.tconstruct.library.modifiers.hook.armor.ArmorWalkModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.armor.ElytraFlightModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.armor.OnAttackedModifierHook;
@@ -54,11 +66,15 @@ import slimeknights.tconstruct.library.modifiers.hook.build.ConditionalStatModif
 import slimeknights.tconstruct.library.modifiers.hook.build.ModifierRemovalHook;
 import slimeknights.tconstruct.library.modifiers.hook.build.ToolStatsModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.build.VolatileDataModifierHook;
+import slimeknights.tconstruct.library.modifiers.hook.behavior.ProcessLootModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.combat.MeleeHitModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.BlockInteractionModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.EntityInteractionModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.interaction.InteractionSource;
+import slimeknights.tconstruct.library.modifiers.hook.interaction.InventoryTickModifierHook;
+import slimeknights.tconstruct.library.modifiers.hook.interaction.UsingToolModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.mining.BlockBreakModifierHook;
+import slimeknights.tconstruct.library.modifiers.hook.ranged.LauncherHitModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.ranged.ProjectileLaunchModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.special.BlockTransformModifierHook;
 import slimeknights.tconstruct.library.modifiers.hook.special.PlantHarvestModifierHook;
@@ -71,6 +87,8 @@ import slimeknights.tconstruct.library.modifiers.modules.armor.ReplaceBlockWalke
 import slimeknights.tconstruct.library.modifiers.modules.armor.ToolActionWalkerTransformModule;
 import slimeknights.tconstruct.library.module.HookProvider;
 import slimeknights.tconstruct.library.module.ModuleHook;
+import slimeknights.tconstruct.library.recipe.entitymelting.EntityMeltingRecipe;
+import slimeknights.tconstruct.library.recipe.entitymelting.EntityMeltingRecipeCache;
 import slimeknights.tconstruct.library.tools.SlotType;
 import slimeknights.tconstruct.library.tools.context.EquipmentContext;
 import slimeknights.tconstruct.library.tools.context.ToolAttackContext;
@@ -82,15 +100,25 @@ import slimeknights.tconstruct.library.tools.definition.module.weapon.CircleWeap
 import slimeknights.tconstruct.library.tools.definition.module.weapon.MeleeHitToolHook;
 import slimeknights.tconstruct.library.tools.definition.module.weapon.SweepWeaponAttack;
 import slimeknights.tconstruct.library.tools.item.IModifiable;
+import slimeknights.tconstruct.library.tools.helper.ModifierUtil;
 import slimeknights.tconstruct.library.tools.nbt.*;
 import slimeknights.tconstruct.library.tools.stat.FloatToolStat;
 import slimeknights.tconstruct.library.tools.stat.ModifierStatsBuilder;
 import slimeknights.tconstruct.library.tools.stat.ToolStats;
 import slimeknights.tconstruct.library.utils.MutableUseOnContext;
 import slimeknights.tconstruct.library.utils.Util;
+import slimeknights.tconstruct.smeltery.block.entity.module.EntityMeltingModule;
+import slimeknights.tconstruct.tools.TinkerModifiers;
 import slimeknights.tconstruct.tools.data.ModifierIds;
+import slimeknights.tconstruct.tools.entity.CustomFireball;
+import slimeknights.tconstruct.tools.entity.FluidEffectProjectile;
+import slimeknights.tconstruct.tools.modules.MeltingModule;
+import slimeknights.tconstruct.tools.modules.combat.SpillingModule;
+import slimeknights.tconstruct.tools.modules.interaction.BucketModule;
+import slimeknights.tconstruct.tools.modules.interaction.SplashingModule;
 import slimeknights.tconstruct.tools.modules.armor.FireWalkerModule;
 import slimeknights.tconstruct.tools.modules.armor.GlowWalkerModule;
+import slimeknights.tconstruct.common.TinkerTags;
 
 import java.util.Collections;
 import java.util.List;
@@ -101,12 +129,14 @@ import static pyre.tinkerslevellingaddon.util.ToolLevellingUtil.addExperience;
 import static pyre.tinkerslevellingaddon.util.ToolLevellingUtil.processPendingLevelUp;
 import static pyre.tinkerslevellingaddon.util.ToolUtil.*;
 import static pyre.tinkerslevellingaddon.util.WorldUtil.*;
+import static slimeknights.tconstruct.library.tools.capability.fluid.ToolTankHelper.TANK_HELPER;
 
 @EventBusSubscriber(modid = TinkersLevellingAddon.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook, ShearsModifierHook,
         BlockBreakModifierHook, BlockTransformModifierHook, ProjectileLaunchModifierHook, OnAttackedModifierHook,
-        MeleeHitModifierHook, ElytraFlightModifierHook, ArmorWalkModifierHook, EntityInteractionModifierHook,
-        BlockInteractionModifierHook, SlingLaunchModifierHook, ModifierRemovalHook,
+        MeleeHitModifierHook, LauncherHitModifierHook, ElytraFlightModifierHook, ArmorWalkModifierHook,
+        UsingToolModifierHook, InventoryTickModifierHook, EntityInteractionModifierHook,
+        BlockInteractionModifierHook, SlingLaunchModifierHook, ProcessLootModifierHook, ModifierRemovalHook,
         VolatileDataModifierHook, ToolStatsModifierHook {
     INSTANCE;
 
@@ -114,9 +144,10 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
             HookProvider.<ImprovableModule>defaultHooks(ModifierHooks.PLANT_HARVEST, ModifierHooks.SHEAR_ENTITY,
                     ModifierHooks.ENTITY_INTERACT, ModifierHooks.BLOCK_TRANSFORM, ModifierHooks.BLOCK_BREAK,
                     ModifierHooks.BLOCK_INTERACT, ModifierHooks.ON_ATTACKED, ModifierHooks.MELEE_HIT,
-                    ModifierHooks.PROJECTILE_LAUNCH, ModifierHooks.ELYTRA_FLIGHT, ModifierHooks.BOOT_WALK,
-                    ModifierHooks.SLING_LAUNCH, ModifierHooks.VOLATILE_DATA, ModifierHooks.TOOL_STATS,
-                    ModifierHooks.REMOVE);
+                    ModifierHooks.LAUNCHER_HIT, ModifierHooks.PROJECTILE_LAUNCH, ModifierHooks.ELYTRA_FLIGHT,
+                    ModifierHooks.BOOT_WALK, ModifierHooks.SLING_LAUNCH, ModifierHooks.TOOL_USING,
+                    ModifierHooks.INVENTORY_TICK, ModifierHooks.PROCESS_LOOT, ModifierHooks.VOLATILE_DATA,
+                    ModifierHooks.TOOL_STATS, ModifierHooks.REMOVE);
 
     public static final RecordLoadable<ImprovableModule> LOADER = new SingletonLoader<>(INSTANCE);
 
@@ -233,6 +264,60 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 handleCircleAttack(context, tool, player, damageDealt, circleHook);
             }
         }
+        if (Config.enableSpillingXp.get() && damageDealt > 0 && context.isFullyCharged()) {
+            handleSpilling(tool, tool.getModifier(ModifierIds.spilling), context.getAttacker(),
+                    context.getPlayerAttacker(), context.getTarget(), context.getLivingTarget(), context.getProjectile());
+        }
+        if (Config.enableMeltingXp.get() && damageDealt > 0 &&
+                tool.getModifier(TinkerModifiers.melting.getId()) != ModifierEntry.EMPTY) {
+            handleTargetMelting(tool, context.getLivingTarget());
+        }
+    }
+
+    @Override
+    public void onLauncherHitEntity(IToolStackView tool, ModifierEntry modifier, Projectile projectile,
+                                    LivingEntity attacker, Entity target, @Nullable LivingEntity livingTarget,
+                                    float damageDealt) {
+        if (!(attacker instanceof ServerPlayer player)) {
+            return;
+        }
+        if (Config.enableAttackingXp.get() && !tool.isBroken() && isValidLauncherTarget(player, target)) {
+            int xp = (Config.damageDealt.get() ? Math.round(damageDealt) : 1) + Config.bonusAttackingXp.get();
+            addExperience(tool, xp);
+        }
+        if (Config.enableSpillingXp.get() && damageDealt > 0) {
+            handleSpilling(tool, tool.getModifier(ModifierIds.spilling), attacker, ModifierUtil.asPlayer(attacker),
+                    target, livingTarget, projectile);
+        }
+        if (Config.enableMeltingXp.get() && damageDealt > 0 &&
+                tool.getModifier(TinkerModifiers.melting.getId()) != ModifierEntry.EMPTY) {
+            handleTargetMelting(tool, livingTarget);
+        }
+    }
+
+    @Override
+    public void onLauncherHitBlock(IToolStackView tool, ModifierEntry modifier, Projectile projectile,
+                                   LivingEntity owner, BlockPos target) {
+        if (!tool.isBroken() && owner instanceof ServerPlayer && Config.enableGrapplingXp.get() &&
+                projectile instanceof FishingHook) {
+            addExperience(tool, 1 + Config.bonusGrapplingXp.get());
+        }
+    }
+
+    @SubscribeEvent
+    static void onItemFished(ItemFishedEvent event) {
+        if (Config.enableFishingXp.get() && event.getEntity() instanceof ServerPlayer player) {
+            ItemStack stack = player.getMainHandItem();
+            if (!stack.canPerformAction(ItemAbilities.FISHING_ROD_CAST)) {
+                stack = player.getOffhandItem();
+                if (!stack.canPerformAction(ItemAbilities.FISHING_ROD_CAST)) {
+                    return;
+                }
+            }
+            if (hasImprovable(stack)) {
+                addExperience(ToolStack.from(stack), 1 + Config.bonusFishingXp.get());
+            }
+        }
     }
 
     @Override
@@ -256,8 +341,19 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
     public void onProjectileLaunch(IToolStackView tool, ModifierEntry modifier, LivingEntity shooter,
                                    Projectile projectile, @Nullable AbstractArrow arrow, ModDataNBT persistentData,
                                    boolean primary) {
-        if (Config.enableShootingXp.get()) {
+        if (!(shooter instanceof ServerPlayer) || projectile instanceof FishingHook) {
+            //we can get tool context when fishing/grappling, so we do not reward xp on launching fishing hook
+            return;
+        }
+        //no way to get tool context when the arrow lands, so reward xp on launch instead
+        if (Config.enableShootingXp.get() && arrow != null) {
             addExperience(tool, 1 + Config.bonusShootingXp.get());
+        }
+        if (Config.enableSpittingXp.get() && projectile instanceof FluidEffectProjectile) {
+            addExperience(tool, 1 + Config.bonusSpittingXp.get());
+        }
+        if (Config.enableSlimeballXp.get() && projectile instanceof CustomFireball) {
+            addExperience(tool, 1 + Config.bonusSlimeballXp.get());
         }
     }
 
@@ -389,6 +485,11 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 && target instanceof Creeper creeper && !creeper.isIgnited()) {
             addExperience(tool, 1 + Config.bonusFirestarterXp.get());
         }
+        ModifierEntry splashing = tool.getModifier(ModifierIds.splashing);
+        if (Config.enableSplashingXp.get() && splashing != ModifierEntry.EMPTY
+                && tool.getHook(ToolHooks.INTERACTION).canInteract(tool, ModifierIds.splashing, source)) {
+            handleEntitySplashing(tool, player, target, splashing);
+        }
         return InteractionResult.PASS;
     }
 
@@ -418,7 +519,66 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
                 && tool.getHook(ToolHooks.INTERACTION).canInteract(tool, ModifierIds.firestarter, source)) {
             handleFirestarter(tool, context);
         }
+        ModifierEntry splashing = tool.getModifier(ModifierIds.splashing);
+        if (Config.enableSplashingXp.get() && splashing != ModifierEntry.EMPTY
+                && tool.getHook(ToolHooks.INTERACTION).canInteract(tool, ModifierIds.splashing, source)) {
+            handleBlockSplashing(tool, context, splashing);
+        }
+        ModifierEntry bucketing = tool.getModifier(ModifierIds.bucketing);
+        if (Config.enableBucketingXp.get() && bucketing != ModifierEntry.EMPTY
+                && tool.getHook(ToolHooks.INTERACTION).canInteract(tool, ModifierIds.bucketing, source)) {
+            handleBucketing(tool, context, bucketing);
+        }
         return InteractionResult.PASS;
+    }
+
+    @Override
+    public void onUsingTick(IToolStackView tool, ModifierEntry modifier, LivingEntity entity, int useDuration,
+                            int timeLeft, ModifierEntry activeModifier) {
+        if (tool.isBroken() || timeLeft < 0 || !(entity instanceof ServerPlayer player)) {
+            return;
+        }
+
+        if (Config.enableBrushingXp.get() && ModifierIds.brushing.equals(activeModifier.getId())) {
+            handleBrushing(tool, entity, timeLeft, player, activeModifier);
+        }
+        ModifierEntry slurping = tool.getModifier(ModifierIds.slurping);
+        if (Config.enableSlurpingXp.get() && slurping != ModifierEntry.EMPTY && slurping.equals(activeModifier)) {
+            handleToolSlurping(tool, useDuration - timeLeft, player, slurping);
+        }
+    }
+
+    @Override
+    public void beforeReleaseUsing(IToolStackView tool, ModifierEntry modifier, LivingEntity entity, int useDuration,
+                                   int timeLeft, ModifierEntry activeModifier) {
+        if (tool.isBroken() || timeLeft < 0 || !(entity instanceof ServerPlayer player)) {
+            return;
+        }
+        ModifierEntry slurping = tool.getModifier(ModifierIds.slurping);
+        if (Config.enableSlurpingXp.get() && slurping != ModifierEntry.EMPTY && slurping.equals(activeModifier)) {
+            handleToolSlurping(tool, useDuration - timeLeft, player, slurping);
+        }
+    }
+
+    @Override
+    public void onInventoryTick(IToolStackView tool, ModifierEntry modifier, Level world, LivingEntity holder,
+                                int itemSlot, boolean isSelected, boolean isCorrectSlot, ItemStack stack) {
+        if (tool.isBroken() || !(holder instanceof ServerPlayer player)) {
+            return;
+        }
+        ModifierEntry slurping = tool.getModifier(ModifierIds.slurping);
+        if (Config.enableSlurpingXp.get() && slurping != ModifierEntry.EMPTY && isCorrectSlot) {
+            handleArmorSlurping(tool, player, slurping);
+        }
+    }
+
+    @Override
+    public void processLoot(IToolStackView tool, ModifierEntry modifier, List<ItemStack> generatedLoot,
+                            LootContext context) {
+        ModifierEntry melting = tool.getModifier(TinkerModifiers.melting.getId());
+        if (Config.enableMeltingXp.get() && melting != ModifierEntry.EMPTY) {
+            handleLootMelting(tool, generatedLoot, context, melting);
+        }
     }
 
     private int getThornsBonus(IToolStackView tool) {
@@ -607,6 +767,255 @@ public enum ImprovableModule implements ModifierModule, PlantHarvestModifierHook
             if (canIgnite(world, target, world.getBlockState(target), sideHit, horizontalFacing)) {
                 addExperience(tool, 1 + Config.bonusFirestarterXp.get());
             }
+        }
+    }
+    private void handleBrushing(IToolStackView tool, LivingEntity entity, int timeLeft, ServerPlayer player, ModifierEntry activeModifier) {
+        //code based on BrushModule.onUsingTick
+        HitResult hit = calculateHitResult(entity);
+        if (hit.getType() == HitResult.Type.BLOCK && hit instanceof BlockHitResult blockHit) {
+            if ((activeModifier.getHook(ModifierHooks.GENERAL_INTERACT).getUseDuration(tool, activeModifier) - timeLeft + 1) % 10 == 5) {
+                Level level = entity.level();
+                BlockState state = level.getBlockState(blockHit.getBlockPos());
+                InteractionHand hand = entity.getUsedItemHand();
+
+                // we can only check if block is brushable
+                if (isBrushable(blockHit, level)) {
+                    addExperience(tool, 1 + Config.bonusBrushingXp.get());
+                }
+
+                // brush AOE blocks
+                UseOnContext context = new UseOnContext(level, player, hand, player.getItemInHand(hand), blockHit);
+                for (BlockPos extraPos : tool.getDefinition().getHook(ToolHooks.AOE_ITERATOR)
+                        .getBlocks(tool, context, state, AreaOfEffectIterator.AOEMatchType.TRANSFORM)) {
+                    if (isBrushable(Util.offset(blockHit, extraPos), level)) {
+                        addExperience(tool, 1 + Config.bonusBrushingXp.get());
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleSpilling(IToolStackView tool, ModifierEntry spilling, LivingEntity attacker,
+                                Player playerAttacker, Entity target, LivingEntity livingTarget,
+                                Projectile projectile) {
+        if (spilling == ModifierEntry.EMPTY) {
+            return;
+        }
+
+        MeleeHitModifierHook hook = spilling.getModifier().getHook(ModifierHooks.MELEE_HIT);
+        if (hook instanceof SpillingModule spillingModule && spillingModule.condition().matches(tool, spilling)) {
+            FluidStack fluid = TANK_HELPER.getFluid(tool);
+            if (!fluid.isEmpty()) {
+                FluidEffects recipe = FluidEffectManager.INSTANCE.find(fluid.getFluid());
+                if (recipe.hasEntityEffects()) {
+                    int consumed = recipe.applyToEntity(fluid, spillingModule.level().compute(spilling.getEffectiveLevel()),
+                            FluidEffectContext.builder(attacker.level())
+                                    .user(attacker, playerAttacker)
+                                    .projectile(projectile)
+                                    .target(target, livingTarget),
+                            IFluidHandler.FluidAction.SIMULATE);
+                    if (consumed > 0) {
+                        addExperience(tool, 1 + Config.bonusSpillingXp.get());
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleEntitySplashing(IToolStackView tool, Player player, Entity target, ModifierEntry splashing) {
+        //code based on SplashingModule.beforeEntityUse
+        EntityInteractionModifierHook hook = splashing.getModifier().getHook(ModifierHooks.ENTITY_INTERACT);
+        if (!(hook instanceof SplashingModule splashingModule)) {
+            return;
+        }
+
+        FluidStack fluid = TANK_HELPER.getFluid(tool);
+        if (!fluid.isEmpty()) {
+            FluidEffects recipe = FluidEffectManager.INSTANCE.find(fluid.getFluid());
+            if (recipe.hasEntityEffects()) {
+                Level world = player.level();
+                float level = splashingModule.strength().compute(splashing);
+                int consumed = recipe.applyToEntity(fluid, level, FluidEffectContext.builder(world).user(player).target(target), IFluidHandler.FluidAction.SIMULATE);
+                if (consumed > 0) {
+                    addExperience(tool, 1 + Config.bonusSplashingXp.get());
+                    fluid.shrink(consumed);
+                }
+                // AoE
+                if (!fluid.isEmpty()) {
+                    float range = 1 + tool.getVolatileData().getInt(IModifiable.EXPANDED);
+                    float rangeSq = range * range;
+                    for (Entity aoeTarget : world.getEntitiesOfClass(Entity.class, target.getBoundingBox().inflate(range, 0.25, range))) {
+                        if (aoeTarget != player && aoeTarget != target && !(aoeTarget instanceof ArmorStand stand && stand.isMarker()) &&
+                                target.distanceToSqr(aoeTarget) < rangeSq && (Config.enablePvp.get() || !(aoeTarget instanceof Player))) {
+                            consumed = recipe.applyToEntity(fluid, level, FluidEffectContext.builder(world).user(player).target(aoeTarget), IFluidHandler.FluidAction.SIMULATE);
+                            if (consumed > 0) {
+                                addExperience(tool, 1 + Config.bonusSplashingXp.get());
+                                fluid.shrink(consumed);
+                                if (fluid.isEmpty()) {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleBlockSplashing(IToolStackView tool, UseOnContext context, ModifierEntry splashing) {
+        //code based on SplashingModule.afterBlockUse
+        EntityInteractionModifierHook hook = splashing.getModifier().getHook(ModifierHooks.ENTITY_INTERACT);
+        if (!(hook instanceof SplashingModule splashingModule)) {
+            return;
+        }
+
+        FluidStack fluid = TANK_HELPER.getFluid(tool);
+        if (!fluid.isEmpty()) {
+            FluidEffects recipe = FluidEffectManager.INSTANCE.find(fluid.getFluid());
+            if (recipe.hasBlockEffects()) {
+                Level world = context.getLevel();
+                Player player = context.getPlayer();
+
+                float level = splashingModule.strength().compute(splashing);
+                BlockHitResult hit = new BlockHitResult(context.getClickLocation(), context.getClickedFace(),
+                        context.getClickedPos(), context.isInside()
+                );
+                BlockState state = world.getBlockState(hit.getBlockPos());
+                int consumed = recipe.applyToBlock(fluid, level,
+                        FluidEffectContext.builder(world)
+                                .user(player)
+                                .block(hit),
+                        IFluidHandler.FluidAction.EXECUTE);
+                if (consumed > 0) {
+                    addExperience(tool, 1 + Config.bonusSplashingXp.get());
+                    fluid.shrink(consumed);
+                }
+
+                // AoE
+                if (!fluid.isEmpty()) {
+                    for (BlockPos offset : tool.getHook(ToolHooks.AOE_ITERATOR)
+                            .getBlocks(tool, context, state, AreaOfEffectIterator.AOEMatchType.TRANSFORM)) {
+                        BlockHitResult offsetHit = Util.offset(hit, offset);
+                        consumed = recipe.applyToBlock(fluid, level,
+                                FluidEffectContext.builder(world)
+                                        .user(player)
+                                        .block(offsetHit),
+                                IFluidHandler.FluidAction.EXECUTE);
+                        if (consumed > 0) {
+                            addExperience(tool, 1 + Config.bonusSplashingXp.get());
+                            fluid.shrink(consumed);
+                            if (fluid.isEmpty()) {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleToolSlurping(IToolStackView tool, int useTime, ServerPlayer player,
+                                    ModifierEntry slurping) {
+        int duration = slurping.getHook(ModifierHooks.GENERAL_INTERACT).getUseDuration(tool, slurping);
+        if (useTime == duration) {
+            if (canSlurp(tool, player, slurping)) {
+                addExperience(tool, 1 + Config.bonusSlurpingXp.get());
+            }
+        }
+    }
+
+    private void handleArmorSlurping(IToolStackView tool, ServerPlayer player, ModifierEntry slurping) {
+        if (tool.hasTag(TinkerTags.Items.WORN_ARMOR)) {
+            int finishTime = tool.getPersistentData().getInt(ModifierIds.slurping.getLocation());
+            if (finishTime > 0 && finishTime - player.tickCount < 0) {
+                if (canSlurp(tool, player, slurping)) {
+                    addExperience(tool, 1 + Config.bonusSlurpingXp.get());
+                }
+            }
+        }
+    }
+
+    private static void handleTargetMelting(IToolStackView tool, LivingEntity target) {
+        if (target == null) {
+            return;
+        }
+        EntityMeltingRecipe recipe = EntityMeltingRecipeCache.findRecipe(target.level().getRecipeManager(), target.getType());
+        FluidStack output;
+        if (recipe != null) {
+            output = recipe.getOutput(target);
+        } else {
+            output = EntityMeltingModule.getDefaultFluid();
+        }
+        FluidStack fluid = TANK_HELPER.getFluid(tool);
+        if (fluid.isEmpty() || fluid.isFluidEqual(output)) {
+            addExperience(tool, 1 + Config.bonusMeltingXp.get());
+        }
+    }
+
+    private void handleLootMelting(IToolStackView tool, List<ItemStack> generatedLoot, LootContext context, ModifierEntry melting) {
+        FluidStack current = TANK_HELPER.getFluid(tool);
+        int capacity = TANK_HELPER.getCapacity(tool);
+        if (current.getAmount() >= capacity) {
+            return;
+        }
+
+        boolean forceMelt = tool.getVolatileData().getBoolean(MeltingModule.FORCE_MELTING);
+        if (forceMelt && context.hasParam(LootContextParams.BLOCK_STATE)) {
+            BlockState state = context.getParam(LootContextParams.BLOCK_STATE);
+            forceMelt = tool.getHook(ToolHooks.IS_EFFECTIVE).isToolEffective(tool, state);
+        }
+
+        Level world = context.getLevel();
+        for (ItemStack stack : generatedLoot) {
+            FluidStack output = getMeltItemResult(melting, stack, world);
+            if (!output.isEmpty() && (current.isEmpty() || current.isFluidEqual(output))) {
+                if (forceMelt) {
+                    addExperience(tool, 1 + Config.bonusMeltingXp.get());
+                } else {
+                    int maxCopies = Math.min((capacity - current.getAmount()) / output.getAmount(), stack.getCount());
+                    if (maxCopies <= 0) {
+                        continue;
+                    }
+                    addExperience(tool, 1 + Config.bonusMeltingXp.get());
+                }
+            } else if (forceMelt) {
+                addExperience(tool, 1 + Config.bonusMeltingXp.get());
+            }
+        }
+    }
+
+    private void handleBucketing(IToolStackView tool, UseOnContext context, ModifierEntry bucketing) {
+        BlockInteractionModifierHook hook = bucketing.getModifier().getHook(ModifierHooks.BLOCK_INTERACT);
+        BucketModule bucketModule;
+        if (hook instanceof BucketModule bucketModule1) {
+            bucketModule = bucketModule1;
+        } else if (hook instanceof BlockInteractionModifierHook.FirstMerger merger) {
+            bucketModule = merger.modules().stream()
+                    .filter(BucketModule.class::isInstance)
+                    .map(BucketModule.class::cast)
+                    .findFirst().orElse(null);
+            if (bucketModule == null) {
+                return;
+            }
+        } else {
+            return;
+        }
+
+        Player player = context.getPlayer();
+        if (player == null || !player.isShiftKeyDown()) {
+            return;
+        }
+        FluidStack fluidStack = TANK_HELPER.getFluid(tool);
+        if (fluidStack.getAmount() < FluidType.BUCKET_VOLUME) {
+            return;
+        }
+        Fluid fluid = fluidStack.getFluid();
+        if (!bucketModule.fluids().matches(fluid) || !(fluid instanceof FlowingFluid)) {
+            return;
+        }
+
+        if (canPlaceBucketFluid(context, player, fluidStack)) {
+            addExperience(tool, 1 + Config.bonusBucketingXp.get());
         }
     }
 }

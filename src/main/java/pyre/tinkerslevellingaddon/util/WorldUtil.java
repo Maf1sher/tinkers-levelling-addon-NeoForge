@@ -2,6 +2,9 @@ package pyre.tinkerslevellingaddon.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Block;
@@ -9,8 +12,13 @@ import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.CandleCakeBlock;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.LiquidBlockContainer;
+import net.minecraft.world.level.block.entity.BrushableBlockEntity;
 import net.minecraft.world.level.block.TntBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.neoforge.fluids.FluidStack;
 import slimeknights.tconstruct.shared.TinkerCommons;
 import slimeknights.tconstruct.shared.block.GlowBlock;
 
@@ -38,6 +46,37 @@ public class WorldUtil {
                 || state.getBlock() instanceof TntBlock || BaseFireBlock.canBePlacedAt(world, pos.relative(sideHit), facing);
     }
 
+
+    public static boolean isBrushable(BlockHitResult blockHit, Level world) {
+        return world.getBlockEntity(blockHit.getBlockPos()) instanceof BrushableBlockEntity;
+    }
+
+    public static boolean canPlaceBucketFluid(UseOnContext context, Player player, FluidStack fluidStack) {
+        Fluid fluid = fluidStack.getFluid();
+        Direction face = context.getClickedFace();
+        Level world = context.getLevel();
+        BlockPos target = context.getClickedPos();
+        BlockPos offset = target.relative(face);
+        if (!world.mayInteract(player, target) || !player.mayUseItemAt(offset, face, context.getItemInHand())) {
+            return false;
+        }
+
+        BlockState existing = world.getBlockState(target);
+        if (cannotContainFluid(world, player, target, existing, fluidStack.getFluid())) {
+            target = offset;
+            existing = world.getBlockState(target);
+            if (!existing.isAir() && !existing.canBeReplaced(fluid) &&
+                    cannotContainFluid(world, player, target, existing, fluidStack.getFluid())) {
+                return false;
+            }
+        }
+
+        return fluid.getFluidType().isVaporizedOnPlacement(world, target, fluidStack) ||
+                world.dimensionType().ultraWarm() && fluid.is(FluidTags.WATER) ||
+                existing.getBlock() instanceof LiquidBlockContainer ||
+                existing.canBeReplaced(fluid);
+    }
+
     private static boolean canGlowBlockStay(Level world, BlockPos pos, Direction facing) {
         BlockPos placedOn = pos.relative(facing);
 
@@ -46,6 +85,10 @@ public class WorldUtil {
         boolean isLiquid = world.getBlockState(pos).getBlock() instanceof LiquidBlock;
 
         return !isLiquid && isSolidSide;
+    }
+
+    private static boolean cannotContainFluid(Level world, Player player, BlockPos pos, BlockState state, Fluid fluid) {
+        return !(state.getBlock() instanceof LiquidBlockContainer container && container.canPlaceLiquid(player, world, pos, state, fluid));
     }
 
     private WorldUtil() {

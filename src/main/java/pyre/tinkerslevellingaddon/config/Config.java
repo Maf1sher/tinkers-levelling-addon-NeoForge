@@ -144,6 +144,16 @@ public class Config {
     public static ModConfigSpec.BooleanValue enableBonkingXp;
     public static ModConfigSpec.BooleanValue enableGlowingXp;
     public static ModConfigSpec.BooleanValue enableFirestarterXp;
+    public static ModConfigSpec.BooleanValue enableBrushingXp;
+    public static ModConfigSpec.BooleanValue enableBucketingXp;
+    public static ModConfigSpec.BooleanValue enableFishingXp;
+    public static ModConfigSpec.BooleanValue enableGrapplingXp;
+    public static ModConfigSpec.BooleanValue enableMeltingXp;
+    public static ModConfigSpec.BooleanValue enableSlimeballXp;
+    public static ModConfigSpec.BooleanValue enableSlurpingXp;
+    public static ModConfigSpec.BooleanValue enableSpillingXp;
+    public static ModConfigSpec.BooleanValue enableSpittingXp;
+    public static ModConfigSpec.BooleanValue enableSplashingXp;
 
     //toolLevelling.bonuses
     public static ModConfigSpec.IntValue bonusMiningXp;
@@ -171,6 +181,16 @@ public class Config {
     public static ModConfigSpec.IntValue bonusBonkingXp;
     public static ModConfigSpec.IntValue bonusGlowingXp;
     public static ModConfigSpec.IntValue bonusFirestarterXp;
+    public static ModConfigSpec.IntValue bonusBrushingXp;
+    public static ModConfigSpec.IntValue bonusBucketingXp;
+    public static ModConfigSpec.IntValue bonusFishingXp;
+    public static ModConfigSpec.IntValue bonusGrapplingXp;
+    public static ModConfigSpec.IntValue bonusMeltingXp;
+    public static ModConfigSpec.IntValue bonusSlimeballXp;
+    public static ModConfigSpec.IntValue bonusSlurpingXp;
+    public static ModConfigSpec.IntValue bonusSpillingXp;
+    public static ModConfigSpec.IntValue bonusSpittingXp;
+    public static ModConfigSpec.IntValue bonusSplashingXp;
 
     //CLIENT
     public static ModConfigSpec.BooleanValue enableLevelUpMessage;
@@ -546,6 +566,37 @@ public class Config {
         enableFirestarterXp = builder.translation("config.tinkerslevellingaddon.levelling.firestarter")
                 .define("firestarter", true);
 
+        enableBrushingXp = builder.translation("config.tinkerslevellingaddon.levelling.brushing")
+                .define("brushing", true);
+
+        enableBucketingXp = builder.comment("Placing fluids in world only, no container filling, no fluid pickup.")
+                .translation("config.tinkerslevellingaddon.levelling.bucketing")
+                .define("bucketing", true);
+
+        enableFishingXp = builder.translation("config.tinkerslevellingaddon.levelling.fishing")
+                .define("fishing", true);
+
+        enableGrapplingXp = builder.translation("config.tinkerslevellingaddon.levelling.grappling")
+                .define("grappling", true);
+
+        enableMeltingXp = builder.translation("config.tinkerslevellingaddon.levelling.melting")
+                .define("melting", true);
+
+        enableSlimeballXp = builder.translation("config.tinkerslevellingaddon.levelling.slimeball")
+                .define("slimeball", true);
+
+        enableSlurpingXp = builder.translation("config.tinkerslevellingaddon.levelling.slurping")
+                .define("slurping", true);
+
+        enableSpillingXp = builder.translation("config.tinkerslevellingaddon.levelling.spilling")
+                .define("spilling", true);
+
+        enableSpittingXp = builder.translation("config.tinkerslevellingaddon.levelling.spitting")
+                .define("spitting", true);
+
+        enableSplashingXp = builder.translation("config.tinkerslevellingaddon.levelling.splashing")
+                .define("splashing", true);
+
         builder.pop();
     }
 
@@ -628,6 +679,36 @@ public class Config {
         
         bonusFirestarterXp = builder.translation("config.tinkerslevellingaddon.levelling.firestarter")
                 .defineInRange("firestarter", 0, 0, Integer.MAX_VALUE);
+
+        bonusBrushingXp = builder.translation("config.tinkerslevellingaddon.levelling.brushing")
+                .defineInRange("brushing", 0, 0, Integer.MAX_VALUE);
+
+        bonusBucketingXp = builder.translation("config.tinkerslevellingaddon.levelling.bucketing")
+                .defineInRange("bucketing", 0, 0, Integer.MAX_VALUE);
+
+        bonusFishingXp = builder.translation("config.tinkerslevellingaddon.levelling.fishing")
+                .defineInRange("fishing", 0, 0, Integer.MAX_VALUE);
+
+        bonusGrapplingXp = builder.translation("config.tinkerslevellingaddon.levelling.grappling")
+                .defineInRange("grappling", 0, 0, Integer.MAX_VALUE);
+
+        bonusMeltingXp = builder.translation("config.tinkerslevellingaddon.levelling.melting")
+                .defineInRange("melting", 0, 0, Integer.MAX_VALUE);
+
+        bonusSlimeballXp = builder.translation("config.tinkerslevellingaddon.levelling.slimeball")
+                .defineInRange("slimeball", 0, 0, Integer.MAX_VALUE);
+
+        bonusSlurpingXp = builder.translation("config.tinkerslevellingaddon.levelling.slurping")
+                .defineInRange("slurping", 0, 0, Integer.MAX_VALUE);
+
+        bonusSpillingXp = builder.translation("config.tinkerslevellingaddon.levelling.spilling")
+                .defineInRange("spilling", 0, 0, Integer.MAX_VALUE);
+
+        bonusSpittingXp = builder.translation("config.tinkerslevellingaddon.levelling.spitting")
+                .defineInRange("spitting", 0, 0, Integer.MAX_VALUE);
+
+        bonusSplashingXp = builder.translation("config.tinkerslevellingaddon.levelling.splashing")
+                .defineInRange("splashing", 0, 0, Integer.MAX_VALUE);
 
         builder.pop();
     }
