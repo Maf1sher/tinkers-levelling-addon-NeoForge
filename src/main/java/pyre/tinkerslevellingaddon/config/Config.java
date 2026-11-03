@@ -2,7 +2,7 @@ package pyre.tinkerslevellingaddon.config;
 
 import com.electronwill.nightconfig.core.EnumGetMethod;
 import net.minecraft.sounds.SoundEvent;
-import net.neoforged.fml.ModLoadingContext;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import pyre.tinkerslevellingaddon.setup.Sounds;
@@ -802,9 +802,9 @@ public class Config {
                 .defineEnum("sound", LevelUpSound.SNARE_DRUM, EnumGetMethod.NAME_IGNORECASE, LevelUpSound.values());
     }
 
-    public static void init() {
-        ModLoadingContext.get().getActiveContainer().registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
-        ModLoadingContext.get().getActiveContainer().registerConfig(ModConfig.Type.CLIENT, CLIENT_CONFIG);
+    public static void init(ModContainer container) {
+        container.registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
+        container.registerConfig(ModConfig.Type.CLIENT, CLIENT_CONFIG);
     }
 
     public static List<String> getToolsSlotsOrder() {

@@ -70,7 +70,10 @@ neoForge {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+    exclude '.cache'
+}
 
 dependencies {
     implementation fileTree(dir: '../Mantle-NeoForge/build/libs', include: 'Mantle-*.jar', exclude: ['*-sources.jar', '*-javadoc.jar'])

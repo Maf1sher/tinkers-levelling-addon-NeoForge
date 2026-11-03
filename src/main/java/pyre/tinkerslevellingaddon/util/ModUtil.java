@@ -2,7 +2,6 @@ package pyre.tinkerslevellingaddon.util;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.Util;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.*;
 import net.minecraft.resources.ResourceLocation;
 import pyre.tinkerslevellingaddon.TinkersLevellingAddon;
@@ -13,25 +12,26 @@ public class ModUtil {
         return ResourceLocation.fromNamespaceAndPath(TinkersLevellingAddon.MOD_ID, name);
     }
     
-    public static boolean canTranslate(String base, String name) {
-        return I18n.exists(Util.makeDescriptionId(base, getResource(toSnakeCase(name))));
+    /** Translation key for the given base and name; usable on both sides, unlike a client translation lookup */
+    public static String getTranslationKey(String base, String name) {
+        return Util.makeDescriptionId(base, getResource(toSnakeCase(name)));
     }
     
     public static MutableComponent makeTranslation(String base, String name) {
-        return Component.translatable(Util.makeDescriptionId(base, getResource(toSnakeCase(name))));
+        return Component.translatable(getTranslationKey(base, name));
     }
     
     public static MutableComponent makeTranslation(String base, String name, TextColor color) {
-        return Component.translatable(Util.makeDescriptionId(base, getResource(toSnakeCase(name))))
+        return Component.translatable(getTranslationKey(base, name))
                 .withStyle(s -> s.withColor(color));
     }
     
     public static MutableComponent makeTranslation(String base, String name, Object... arguments) {
-        return Component.translatable(Util.makeDescriptionId(base, getResource(toSnakeCase(name))), arguments);
+        return Component.translatable(getTranslationKey(base, name), arguments);
     }
     
     public static MutableComponent makeTranslation(String base, String name, ChatFormatting color, Object... arguments) {
-        return Component.translatable(Util.makeDescriptionId(base, getResource(toSnakeCase(name))), arguments)
+        return Component.translatable(getTranslationKey(base, name), arguments)
                 .withStyle(color);
     }
     

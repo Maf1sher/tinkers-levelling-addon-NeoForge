@@ -1,6 +1,7 @@
 package pyre.tinkerslevellingaddon.setup;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
@@ -186,12 +187,12 @@ public class TooltipEventHandler {
 
     private static MutableComponent getLevelName(int level) {
         TextColor levelColor = getLevelColor(level);
-        if(ModUtil.canTranslate("tooltip", "level." + level)) {
+        if(canTranslate("tooltip", "level." + level)) {
             return ModUtil.makeTranslation("tooltip", "level." + level, levelColor);
         }
 
         int i = 1;
-        while(ModUtil.canTranslate("tooltip", "level." + i)) {
+        while(canTranslate("tooltip", "level." + i)) {
             i++;
         }
         int tier = level / i;
@@ -204,5 +205,10 @@ public class TooltipEventHandler {
         float hue = (0.277777f * level);
         hue = hue - (int) hue;
         return TextColor.fromRgb(Color.HSBtoRGB(hue, 0.75f, 0.8f));
+    }
+
+    /** Client-only translation lookup; {@code Language} is not available on a dedicated server */
+    private static boolean canTranslate(String base, String name) {
+        return I18n.exists(ModUtil.getTranslationKey(base, name));
     }
 }

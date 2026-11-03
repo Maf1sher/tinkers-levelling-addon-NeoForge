@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
@@ -23,10 +24,9 @@ public class TinkersLevellingAddon {
 
     public static final String MOD_ID = "tinkerslevellingaddon";
 
-    public TinkersLevellingAddon(IEventBus modEventBus) {
-        Config.init();
+    public TinkersLevellingAddon(IEventBus modEventBus, ModContainer modContainer) {
+        Config.init(modContainer);
         Registration.init(modEventBus);
-        // Messages.register();
         ModCommands.init();
 
         modEventBus.addListener(this::gatherData);
